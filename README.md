@@ -61,6 +61,6 @@ signatureBin = open("signature.binary").read()
 message = open("message.txt").read()
 
 publicKey = PublicKey.fromPem(publicKeyPem)
-signature = Signature.decode(signatureBin)
+signature = Signature.fromDer(signatureBin)
 print Ecdsa.verify(message, signature, publicKey)
 ```

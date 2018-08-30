@@ -20,6 +20,9 @@ class CurveFp:
       """Is the point R(x,y) on this curve?"""
       return (y**2 - (x**3 + self.A * x + self.B)) % self.P == 0
 
+    def length(self):
+        return (1 + len("%x" % self.N)) // 2
+
 
 secp256k1 = CurveFp(
     name="secp256k1",
