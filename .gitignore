@@ -1,0 +1,11 @@
+*.pyc
+*.idea/*
+*.DS_Store
+
+# folder used by virtualenv
+env
+.env
+
+# ignore info from all dependencies
+*.dist-info
+*.egg-info
