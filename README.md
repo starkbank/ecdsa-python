@@ -1,34 +1,38 @@
-## Lightweight and Fast Pure Python ECDSA
+## A lightweight and fast pure Python ECDSA
 
 ### Overview
 
-We try other Python libraries such as [python-ecdsa], [fast-ecdsa] and others less famous ones, but we don't find what suit us. The Fist one is based on pure Python, but it's too slow. The second one mixed Python and C, it's really fast, but we were unable to use it in our current infrastructure that required pure Python code.
+We tried other Python libraries such as [python-ecdsa], [fast-ecdsa] and others less famous ones, but we didn't find anything that suit our needs. The fist one was pure Python, but it was too slow. The second one mixed Python and C and it was really fast, but we were unable to use it in our current infrastructure that required pure Python code.
 
 [python-ecdsa]: https://github.com/warner/python-ecdsa
 [fast-ecdsa]: https://github.com/AntonKueltz/fastecdsa
 
-For this reason, we decide to create something simple, compatible with `OpenSSL` and fast using some eleghant math as Jacobian Coordenates to speed up the ECDSA.
-
+For this reason, we decided to create something simple, compatible with OpenSSL and fast using some elegant math as Jacobian Coordinates to speed up the ECDSA.
 ### Curves
 
-We current support `secp256k1`but it's super easy to add more curves to the project.
+We currently support `secp256k1`, but it's super easy to add more curves to the project. Just add them on `curve.py`
 
 ### Speed
 
-We run the test on a MAC Pro i7 2017. We run the each library 100 times and get the average time dispaly bellow:
+We ran a test on a MAC Pro i7 2017. We ran the library 100 times and got the average time displayed bellow:
 
-| Library          | sign          | verify  |
-| ---------------- |:-------------:| -------:|
-| [python-ecdsa]   | 121.3ms       | 65.1ms  |
-| [fast-ecdsa]     | 0.1ms         |  0.2ms  |
-| ellipctic-curve  | 4.1ms         |  8.2ms  |
+| Library            | sign          | verify  |
+| ------------------ |:-------------:| -------:|
+| [python-ecdsa]     |   121.3ms     | 65.1ms  |
+| [fast-ecdsa]       |     0.1ms     |  0.2ms  |
+| starkbank-ecdsa    |     4.1ms     |  7.8ms  |
 
-So pure Python can not compete with libraries with C, but it's `6x faster` to verify and `23x faster` to sign then other pure python libraries.
+So our pure Python code cannot compete with C based libraries, but it's `6x faster` to verify and `23x faster` to sign then other pure Python libraries.
+
+### Sample Code
+
+How to use it:
 
 ```python
 # Generate Keys
 privateKey = PrivateKey()
 publicKey = privateKey.publicKey()
+
 message = "My test message"
 
 # Generate Signature
@@ -38,7 +42,7 @@ signature = Ecsda.sign(message, privateKey)
 print Ecsda.verify(message, signature, publicKey)
 ```
 
-### OpenSSl
+### OpenSSL
 
 This library is compatible with OpenSSL, so you can use it to generate keys:
 
@@ -62,5 +66,12 @@ message = open("message.txt").read()
 
 publicKey = PublicKey.fromPem(publicKeyPem)
 signature = Signature.fromDer(signatureBin)
+
 print Ecdsa.verify(message, signature, publicKey)
+```
+
+### How to install
+
+```
+pip install starkbank-ecdsa
 ```
