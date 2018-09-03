@@ -11,7 +11,7 @@ class Ecdsa:
         hashMessage = hashfunc(message).digest()
         numberMessage = numberFrom(hashMessage)
         curve = privateKey.curve
-        randNum = randint(1, curve.N)
+        randNum = randint(1, curve.N - 1)
         xRandSignPoint, yRandSignPoint = multiply((curve.Gx, curve.Gy), randNum, A=curve.A, P=curve.P, N=curve.N)
         r = xRandSignPoint % curve.N
         s = ((numberMessage + r * privateKey.secret) * (inv(randNum, curve.N))) % curve.N

@@ -11,7 +11,7 @@ class PrivateKey:
 
     def __init__(self, curve=secp256k1, secret=None):
         self.curve = curve
-        self.secret = secret or randint(1, curve.N)
+        self.secret = secret or randint(1, curve.N - 1)
 
     def publicKey(self):
         curve = self.curve
