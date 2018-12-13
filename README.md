@@ -8,6 +8,7 @@ We tried other Python libraries such as [python-ecdsa], [fast-ecdsa] and others 
 [fast-ecdsa]: https://github.com/AntonKueltz/fastecdsa
 
 For this reason, we decided to create something simple, compatible with OpenSSL and fast using some elegant math as Jacobian Coordinates to speed up the ECDSA.
+
 ### Curves
 
 We currently support `secp256k1`, but it's super easy to add more curves to the project. Just add them on `curve.py`
@@ -54,14 +55,14 @@ openssl ec -in privateKey.pem -pubout -out publicKey.pem
 Create a message.txt file and sign it:
 
 ```
-openssl dgst -sha256 -sign privateKey.pem -out signature.binary message.txt
+openssl dgst -sha256 -sign privateKey.pem -out signatureBinary.txt message.txt
 ```
 
 It's time to verify:
 
 ```python
 publicKeyPem = open("publicKey.pem").read()
-signatureBin = open("signature.binary").read()
+signatureBin = open("signatureBinary.txt").read()
 message = open("message.txt").read()
 
 publicKey = PublicKey.fromPem(publicKeyPem)
@@ -69,6 +70,30 @@ signature = Signature.fromDer(signatureBin)
 
 print Ecdsa.verify(message, signature, publicKey)
 ```
+
+You can also verify it on terminal:
+
+```
+openssl dgst -sha256 -verify publicKey.pem -signature signatureBinary.txt message.txt
+```
+
+NOTE: If you want to create a Digital Signature to use in the [Stark Bank], you need to convert the binary signature to base64.
+
+```
+openssl base64 -in signatureBinary.txt -out signatureBase64.txt
+```
+
+With this library, you can do it:
+
+```python
+signatureBin = open("signatureBinary.txt").read()
+
+signature = Signature.fromDer(signatureBin)
+
+print signature.toBase64()
+```
+
+[Stark Bank]: https://starkbank.com
 
 ### How to install
 
