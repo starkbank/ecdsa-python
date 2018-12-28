@@ -1,5 +1,5 @@
 from binascii import hexlify
-from random import randint
+from random import SystemRandom
 from .math import numberFrom, multiply
 from .curve import curvesByOid, supportedCurves
 from .der import fromPem, removeSequence, removeInteger, removeObject, removeOctetString, removeConstructed
@@ -11,7 +11,7 @@ class PrivateKey:
 
     def __init__(self, curve=secp256k1, secret=None):
         self.curve = curve
-        self.secret = secret or randint(1, curve.N - 1)
+        self.secret = secret or SystemRandom().randrange(1, curve.N)
 
     def publicKey(self):
         curve = self.curve
