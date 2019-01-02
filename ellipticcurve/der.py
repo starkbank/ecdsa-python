@@ -7,11 +7,11 @@ def encodeSequence(*encodedPieces):
     return "\x30" + encodeLength(totalLen) + "".join(encodedPieces)
 
 
-def encodeLength(l):
-    assert l >= 0
-    if l < 0x80:
-        return chr(l)
-    s = ("%x" % l).encode()
+def encodeLength(length):
+    assert length >= 0
+    if length < 0x80:
+        return chr(length)
+    s = ("%x" % length).encode()
     if len(s) % 2:
         s = "0" + s
     s = unhexlify(s)
@@ -30,6 +30,37 @@ def encodeInteger(r):
         return "\x02" + chr(len(s)) + s
 
     return "\x02" + chr(len(s)+1) + "\x00" + s
+
+
+def encodeNumber(n):
+    b128Digits = []
+    while n:
+        b128Digits.insert(0, (n & 0x7f) | 0x80)
+        n = n >> 7
+    if not b128Digits:
+        b128Digits.append(0)
+    b128Digits[-1] &= 0x7f
+    return "".join([chr(d) for d in b128Digits])
+
+
+def encodeOid(first, second, *pieces):
+    assert first <= 2
+    assert second <= 39
+    encodedPieces = [chr(40*first+second)] + [encodeNumber(p) for p in pieces]
+    body = "".join(encodedPieces)
+    return "\x06" + encodeLength(len(body)) + body
+
+
+def encodeBitstring(s):
+    return "\x03" + encodeLength(len(s)) + s
+
+
+def encodeOctetString(s):
+    return "\x04" + encodeLength(len(s)) + s
+
+
+def encodeConstructed(tag, value):
+    return chr(0xa0+tag) + encodeLength(len(value)) + value
 
 
 def readLength(string):
@@ -139,7 +170,7 @@ def fromPem(pem):
 
 def toPem(der, name):
     b64 = b64encode(der)
-    lines = [("-----BEGIN %s-----\n".format(name)).encode()]
-    lines.extend(["{}\n".format(b64[start:start+64]) for start in xrange(0, len(b64), 64)])
-    lines.append(("-----END %s-----\n".format("name")).encode())
+    lines = [("-----BEGIN {name}-----\n".format(name=name)).encode()]
+    lines.extend(["{content}\n".format(content=b64[start:start+64]) for start in xrange(0, len(b64), 64)])
+    lines.append(("-----END {name}-----\n".format(name=name)).encode())
     return "".join(lines)

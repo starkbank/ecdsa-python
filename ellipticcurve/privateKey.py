@@ -1,8 +1,8 @@
 from binascii import hexlify
 from random import SystemRandom
-from .math import numberFrom, multiply
+from .math import numberFrom, stringFrom, multiply
 from .curve import curvesByOid, supportedCurves
-from .der import fromPem, removeSequence, removeInteger, removeObject, removeOctetString, removeConstructed
+from .der import fromPem, removeSequence, removeInteger, removeObject, removeOctetString, removeConstructed, toPem, encodeSequence, encodeInteger, encodeBitstring, encodeOid, encodeOctetString, encodeConstructed
 from .publicKey import PublicKey
 from .curve import secp256k1
 
@@ -19,7 +19,19 @@ class PrivateKey:
         return PublicKey(xPublicKey, yPublicKey, curve)
 
     def toString(self):
-        return "020{}".format(str(hex(self.secret))[2:-1])
+        return stringFrom(number=self.secret, length=self.curve.length())
+
+    def toDer(self):
+        encodedPublicKey = self.publicKey().toString(encoded=True)
+        return encodeSequence(
+            encodeInteger(1),
+            encodeOctetString(self.toString()),
+            encodeConstructed(0, encodeOid(*self.curve.oid)),
+            encodeConstructed(1, encodeBitstring(encodedPublicKey)),
+        )
+
+    def toPem(self):
+        return toPem(der=self.toDer(), name="EC PRIVATE KEY")
 
     @classmethod
     def fromPem(cls, string):

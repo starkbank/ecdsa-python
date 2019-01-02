@@ -1,4 +1,4 @@
-from binascii import hexlify
+from binascii import hexlify, unhexlify
 
 
 def multiply(a, n, N, A, P):
@@ -153,3 +153,10 @@ def numberFrom(string):
     :return: Number in hex from string
     """
     return int(hexlify(string), 16)
+
+
+def stringFrom(number, length):
+    fmtStr = "%0" + str(2 * length) + "x"
+    string = unhexlify((fmtStr % number).encode())
+    assert len(string) == length, (len(string), length)
+    return string

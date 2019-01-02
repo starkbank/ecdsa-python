@@ -1,7 +1,7 @@
 from binascii import hexlify
 from .curve import curvesByOid, supportedCurves, secp256k1
-from .der import fromPem, removeSequence, removeObject, removeBitString
-from .math import numberFrom
+from .der import fromPem, removeSequence, removeObject, removeBitString, toPem, encodeSequence, encodeOid, encodeBitstring
+from .math import numberFrom, stringFrom
 
 
 class PublicKey:
@@ -11,11 +11,18 @@ class PublicKey:
         self.y = y
         self.curve = curve
 
-    def toString(self, compressed=True):
-        return {
-            True:  "020{}".format(str(hex(self.x))[2:-1]),
-            False: "040{}{}".format(str(hex(self.x))[2:-1], str(hex(self.y))[2:-1])
-        }.get(compressed)
+    def toString(self, encoded=False):
+        Xstr = stringFrom(number=self.x, length=self.curve.length())
+        Ystr = stringFrom(number=self.y, length=self.curve.length())
+        return Xstr + Ystr if not encoded else "\x00\x04" + Xstr + Ystr
+
+    def toDer(self):
+        oidEcPublicKey = (1, 2, 840, 10045, 2, 1)
+        encodeEcAndOid = encodeSequence(encodeOid(*oidEcPublicKey), encodeOid(*self.curve.oid))
+        return encodeSequence(encodeEcAndOid, encodeBitstring(self.toString(encoded=True)))
+
+    def toPem(self):
+        return toPem(der=self.toDer(), name="PUBLIC KEY")
 
     @classmethod
     def fromPem(cls, string):
