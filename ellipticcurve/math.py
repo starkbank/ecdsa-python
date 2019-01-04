@@ -156,7 +156,13 @@ def numberFrom(string):
 
 
 def stringFrom(number, length):
+    """
+    Get a string representation of a number
+
+    :param number to be converted in a string
+    :param length max number of character for the string
+    :return: hexadecimal string
+    """
     fmtStr = "%0" + str(2 * length) + "x"
     string = unhexlify((fmtStr % number).encode())
-    assert len(string) == length, (len(string), length)
     return string

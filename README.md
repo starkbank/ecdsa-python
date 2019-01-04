@@ -100,3 +100,9 @@ print signature.toBase64()
 ```
 pip install starkbank-ecdsa
 ```
+
+### Run all unit tests
+
+```
+cd tests && python -m unittest discover -p 'test*.py' && cd ..
+```
