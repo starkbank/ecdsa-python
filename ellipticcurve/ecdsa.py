@@ -2,7 +2,7 @@ from hashlib import sha256
 from random import SystemRandom
 from .signature import Signature
 from .math import multiply, inv, add
-from .utils.binary import BinaryToAscii
+from .utils.binary import BinaryAscii
 
 
 class Ecdsa:
@@ -10,7 +10,7 @@ class Ecdsa:
     @classmethod
     def sign(cls, message, privateKey, hashfunc=sha256):
         hashMessage = hashfunc(message).digest()
-        numberMessage = BinaryToAscii.numberFrom(hashMessage)
+        numberMessage = BinaryAscii.numberFromString(hashMessage)
         curve = privateKey.curve
         randNum = SystemRandom().randrange(1, curve.N)
         randSignPoint = multiply(curve.G, n=randNum, A=curve.A, P=curve.P, N=curve.N)
@@ -21,7 +21,7 @@ class Ecdsa:
     @classmethod
     def verify(cls, message, signature, publicKey, hashfunc=sha256):
         hashMessage = hashfunc(message).digest()
-        numberMessage = BinaryToAscii.numberFrom(hashMessage)
+        numberMessage = BinaryAscii.numberFromString(hashMessage)
         curve = publicKey.curve
         r = signature.r
         s = signature.s

@@ -1,5 +1,5 @@
 from .utils.base import Base64
-from .utils.binary import BinaryToAscii
+from .utils.binary import BinaryAscii
 from .utils.der import encodeSequence, encodeInteger, removeSequence, removeInteger
 
 
@@ -19,11 +19,11 @@ class Signature:
     def fromDer(cls, string):
         rs, empty = removeSequence(string)
         if empty != "":
-            raise Exception("trailing junk after DER sig: %s" % BinaryToAscii.hexFromBinary(empty))
+            raise Exception("trailing junk after DER sig: %s" % BinaryAscii.hexFromBinary(empty))
         r, rest = removeInteger(rs)
         s, empty = removeInteger(rest)
         if empty != "":
-            raise Exception("trailing junk after DER numbers: %s" % BinaryToAscii.hexFromBinary(empty))
+            raise Exception("trailing junk after DER numbers: %s" % BinaryAscii.hexFromBinary(empty))
         return Signature(r, s)
 
     @classmethod

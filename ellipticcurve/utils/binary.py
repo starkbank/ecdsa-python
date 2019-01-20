@@ -1,7 +1,7 @@
 from binascii import hexlify, unhexlify
 
 
-class BinaryToAscii:
+class BinaryAscii:
 
     @classmethod
     def hexFromBinary(cls, data):
@@ -26,7 +26,7 @@ class BinaryToAscii:
         return unhexlify(data)
 
     @classmethod
-    def numberFrom(cls, string):
+    def numberFromString(cls, string):
         """
         Get a number representation of a string
 
@@ -36,7 +36,7 @@ class BinaryToAscii:
         return int(cls.hexFromBinary(string), 16)
 
     @classmethod
-    def stringFrom(cls, number, length):
+    def stringFromNumber(cls, number, length):
         """
         Get a string representation of a number
 
@@ -45,5 +45,4 @@ class BinaryToAscii:
         :return: hexadecimal string
         """
         fmtStr = "%0" + str(2 * length) + "x"
-        string = cls.binaryFromHex((fmtStr % number).encode())
-        return string
+        return cls.binaryFromHex((fmtStr % number).encode())

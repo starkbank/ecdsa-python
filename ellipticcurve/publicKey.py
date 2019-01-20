@@ -1,7 +1,7 @@
 from .point import Point
 from .curve import curvesByOid, supportedCurves, secp256k1
 from .utils.der import fromPem, removeSequence, removeObject, removeBitString, toPem, encodeSequence, encodeOid, encodeBitstring
-from .utils.binary import BinaryToAscii
+from .utils.binary import BinaryAscii
 
 
 class PublicKey:
@@ -11,8 +11,8 @@ class PublicKey:
         self.curve = curve
 
     def toString(self, encoded=False):
-        Xstr = BinaryToAscii.stringFrom(number=self.point.x, length=self.curve.length())
-        Ystr = BinaryToAscii.stringFrom(number=self.point.y, length=self.curve.length())
+        Xstr = BinaryAscii.stringFromNumber(number=self.point.x, length=self.curve.length())
+        Ystr = BinaryAscii.stringFromNumber(number=self.point.y, length=self.curve.length())
         return Xstr + Ystr if not encoded else "\x00\x04" + Xstr + Ystr
 
     def toDer(self):
@@ -31,13 +31,13 @@ class PublicKey:
     def fromDer(cls, string):
         s1, empty = removeSequence(string)
         if empty != "":
-            raise Exception("trailing junk after DER pubkey: {}".format(BinaryToAscii.hexFromBinary(empty)))
+            raise Exception("trailing junk after DER pubkey: {}".format(BinaryAscii.hexFromBinary(empty)))
         s2, pointStrBitstring = removeSequence(s1)
 
         oidPk, rest = removeObject(s2)
         oidCurve, empty = removeObject(rest)
         if empty != "":
-            raise Exception("trailing junk after DER pubkey objects: {}".format(BinaryToAscii.hexFromBinary(empty)))
+            raise Exception("trailing junk after DER pubkey objects: {}".format(BinaryAscii.hexFromBinary(empty)))
 
         curve = curvesByOid.get(oidCurve)
         if not curve:
@@ -45,7 +45,7 @@ class PublicKey:
             oidCurve, ", ".join([curve.name for curve in supportedCurves])))
         pointStr, empty = removeBitString(pointStrBitstring)
         if empty != "":
-            raise Exception("trailing junk after pubkey pointstring: {}".format(BinaryToAscii.hexFromBinary(empty)))
+            raise Exception("trailing junk after pubkey pointstring: {}".format(BinaryAscii.hexFromBinary(empty)))
 
         return cls.fromString(pointStr[2:], curve)
 
@@ -56,7 +56,7 @@ class PublicKey:
         xs = string[:baselen]
         ys = string[baselen:]
 
-        p = Point(x=BinaryToAscii.numberFrom(xs), y=BinaryToAscii.numberFrom(ys))
+        p = Point(x=BinaryAscii.numberFromString(xs), y=BinaryAscii.numberFromString(ys))
 
         if validatePoint and not curve.contains(p):
             raise Exception("point ({x},{y}) is not valid".format(x=p.x, y=p.y))

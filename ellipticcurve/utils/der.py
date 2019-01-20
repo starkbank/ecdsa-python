@@ -1,5 +1,5 @@
 from .base import Base64
-from .binary import BinaryToAscii
+from .binary import BinaryAscii
 
 
 def encodeSequence(*encodedPieces):
@@ -14,7 +14,7 @@ def encodeLength(length):
     s = ("%x" % length).encode()
     if len(s) % 2:
         s = "0" + s
-    s = BinaryToAscii.binaryFromHex(s)
+    s = BinaryAscii.binaryFromHex(s)
     llen = len(s)
     return chr(0x80 | llen) + s
 
@@ -24,7 +24,7 @@ def encodeInteger(r):
     h = ("%x" % r).encode()
     if len(h) % 2:
         h = "0" + h
-    s = BinaryToAscii.binaryFromHex(h)
+    s = BinaryAscii.binaryFromHex(h)
     num = s[0] if isinstance(s[0], (int, long)) else ord(s[0])
     if num <= 0x7f:
         return "\x02" + chr(len(s)) + s
@@ -71,7 +71,7 @@ def readLength(string):
     llen = num & 0x7f
     if llen > len(string)-1:
         raise Exception("ran out of length bytes")
-    return int(BinaryToAscii.hexFromBinary(string[1:1 + llen]), 16), 1 + llen
+    return int(BinaryAscii.hexFromBinary(string[1:1 + llen]), 16), 1 + llen
 
 
 def readNumber(string):
@@ -107,7 +107,7 @@ def removeInteger(string):
     rest = string[1+llen+length:]
     nbytes = numberbytes[0] if isinstance(numberbytes[0], (int, long)) else ord(numberbytes[0])
     assert nbytes < 0x80
-    return int(BinaryToAscii.hexFromBinary(numberbytes), 16), rest
+    return int(BinaryAscii.hexFromBinary(numberbytes), 16), rest
 
 
 def removeObject(string):
