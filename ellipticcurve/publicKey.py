@@ -6,8 +6,8 @@ from .utils.binary import BinaryAscii
 
 class PublicKey:
 
-    def __init__(self, x, y, curve):
-        self.point = Point(x, y)
+    def __init__(self, point, curve):
+        self.point = point
         self.curve = curve
 
     def toString(self, encoded=False):
@@ -61,4 +61,4 @@ class PublicKey:
         if validatePoint and not curve.contains(p):
             raise Exception("point ({x},{y}) is not valid".format(x=p.x, y=p.y))
 
-        return PublicKey(x=p.x, y=p.y, curve=curve)
+        return PublicKey(point=p, curve=curve)

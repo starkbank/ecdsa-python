@@ -16,7 +16,7 @@ class PrivateKey:
     def publicKey(self):
         curve = self.curve
         publicPoint = multiply(curve.G, n=self.secret, A=curve.A, P=curve.P, N=curve.N)
-        return PublicKey(x=publicPoint.x, y=publicPoint.y, curve=curve)
+        return PublicKey(point=publicPoint, curve=curve)
 
     def toString(self):
         return BinaryAscii.stringFromNumber(number=self.secret, length=self.curve.length())
