@@ -1,6 +1,6 @@
-from binascii import hexlify
-from base64 import b64encode, b64decode
-from .der import encodeSequence, encodeInteger, removeSequence, removeInteger
+from .utils.base import Base64
+from .utils.binary import BinaryToAscii
+from .utils.der import encodeSequence, encodeInteger, removeSequence, removeInteger
 
 
 class Signature:
@@ -13,20 +13,20 @@ class Signature:
         return encodeSequence(encodeInteger(self.r), encodeInteger(self.s))
 
     def toBase64(self):
-        return b64encode(self.toDer())
+        return Base64.encode(self.toDer())
 
     @classmethod
     def fromDer(cls, string):
         rs, empty = removeSequence(string)
         if empty != "":
-            raise Exception("trailing junk after DER sig: %s" % hexlify(empty))
+            raise Exception("trailing junk after DER sig: %s" % BinaryToAscii.hexFromBinary(empty))
         r, rest = removeInteger(rs)
         s, empty = removeInteger(rest)
         if empty != "":
-            raise Exception("trailing junk after DER numbers: %s" % hexlify(empty))
+            raise Exception("trailing junk after DER numbers: %s" % BinaryToAscii.hexFromBinary(empty))
         return Signature(r, s)
 
     @classmethod
     def fromBase64(cls, string):
-        der = b64decode(string)
+        der = Base64.decode(string)
         return cls.fromDer(der)

@@ -4,6 +4,8 @@
 # y^2 = x^3 + a*x + b (mod p)
 #
 
+from .point import Point
+
 
 class CurveFp:
 
@@ -12,14 +14,18 @@ class CurveFp:
         self.B = B
         self.P = P
         self.N = N
-        self.Gx = Gx
-        self.Gy = Gy
+        self.G = Point(Gx, Gy)
         self.name = name
         self.oid = oid
 
-    def contains(self, (x,y)):
-      """Is the point R(x,y) on this curve?"""
-      return (y**2 - (x**3 + self.A * x + self.B)) % self.P == 0
+    def contains(self, p):
+        """
+        Verify if the point `p` is on the curve
+
+        :param p: Point p = Point(x, y)
+        :return: boolean
+        """
+        return (p.y**2 - (p.x**3 + self.A * p.x + self.B)) % self.P == 0
 
     def length(self):
         return (1 + len("%x" % self.N)) // 2

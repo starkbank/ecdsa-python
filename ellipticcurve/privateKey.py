@@ -1,8 +1,8 @@
-from binascii import hexlify
 from random import SystemRandom
-from .math import numberFrom, stringFrom, multiply
+from .math import multiply
 from .curve import curvesByOid, supportedCurves
-from .der import fromPem, removeSequence, removeInteger, removeObject, removeOctetString, removeConstructed, toPem, encodeSequence, encodeInteger, encodeBitstring, encodeOid, encodeOctetString, encodeConstructed
+from .utils.binary import BinaryToAscii
+from .utils.der import fromPem, removeSequence, removeInteger, removeObject, removeOctetString, removeConstructed, toPem, encodeSequence, encodeInteger, encodeBitstring, encodeOid, encodeOctetString, encodeConstructed
 from .publicKey import PublicKey
 from .curve import secp256k1
 
@@ -15,11 +15,11 @@ class PrivateKey:
 
     def publicKey(self):
         curve = self.curve
-        xPublicKey, yPublicKey = multiply((curve.Gx, curve.Gy), self.secret, A=curve.A, P=curve.P, N=curve.N)
-        return PublicKey(xPublicKey, yPublicKey, curve)
+        publicPoint = multiply(curve.G, n=self.secret, A=curve.A, P=curve.P, N=curve.N)
+        return PublicKey(x=publicPoint.x, y=publicPoint.y, curve=curve)
 
     def toString(self):
-        return stringFrom(number=self.secret, length=self.curve.length())
+        return BinaryToAscii.stringFrom(number=self.secret, length=self.curve.length())
 
     def toDer(self):
         encodedPublicKey = self.publicKey().toString(encoded=True)
@@ -42,7 +42,7 @@ class PrivateKey:
     def fromDer(cls, string):
         s, empty = removeSequence(string)
         if empty != "":
-            raise Exception("trailing junk after DER privkey: %s" % hexlify(empty))
+            raise Exception("trailing junk after DER privkey: %s" % BinaryToAscii.hexFromBinary(empty))
 
         one, s = removeInteger(s)
         if one != 1:
@@ -55,7 +55,7 @@ class PrivateKey:
 
         oidCurve, empty = removeObject(curveOidStr)
         if empty != "":
-            raise Exception("trailing junk after DER privkey curve_oid: %s" % hexlify(empty))
+            raise Exception("trailing junk after DER privkey curve_oid: %s" % BinaryToAscii.hexFromBinary(empty))
 
         curve = curvesByOid.get(oidCurve)
         if not curve:
@@ -70,4 +70,4 @@ class PrivateKey:
 
     @classmethod
     def fromString(cls, string, curve=secp256k1):
-        return PrivateKey(secret=numberFrom(string), curve=curve)
+        return PrivateKey(secret=BinaryToAscii.numberFrom(string), curve=curve)
