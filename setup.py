@@ -13,9 +13,9 @@ setup(
     license="MIT License",
     url="https://github.com/starkbank/ecdsa-python.git",
     author="Stark Bank",
-    author_email="rafael@starkbank.com",
+    author_email="developers@starkbank.com",
     keywords=["ecdsa", "elliptic curve", "elliptic", "curve", "stark bank", "starkbank", "cryptograph"],
-    version = "0.1.3"
+    version = "0.1.4"
 )
 
 # python setup.py sdist upload -r pypi
