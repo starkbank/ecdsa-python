@@ -100,9 +100,9 @@ def jacobianAdd(p, q, A, P):
     :return: Point that represents the sum of First and Second Point
     """
     if not p.y:
-        return Point(q.x, q.y, q.z)
+        return q
     if not q.y:
-        return Point(p.x, p.y, p.z)
+        return p
     U1 = (p.x * q.z ** 2) % P
     U2 = (q.x * p.z ** 2) % P
     S1 = (p.y * q.z ** 3) % P
