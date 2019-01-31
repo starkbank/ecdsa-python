@@ -37,10 +37,10 @@ publicKey = privateKey.publicKey()
 message = "My test message"
 
 # Generate Signature
-signature = Ecsda.sign(message, privateKey)
+signature = Ecdsa.sign(message, privateKey)
 
 # Verify if signature is valid
-print Ecsda.verify(message, signature, publicKey)
+print Ecdsa.verify(message, signature, publicKey)
 ```
 
 ### OpenSSL
