@@ -30,6 +30,9 @@ So our pure Python code cannot compete with C based libraries, but it's `6x fast
 How to use it:
 
 ```python
+from ellipticcurve.ecdsa import Ecdsa
+from ellipticcurve.privateKey import PrivateKey
+
 # Generate Keys
 privateKey = PrivateKey()
 publicKey = privateKey.publicKey()
@@ -55,18 +58,23 @@ openssl ec -in privateKey.pem -pubout -out publicKey.pem
 Create a message.txt file and sign it:
 
 ```
-openssl dgst -sha256 -sign privateKey.pem -out signatureBinary.txt message.txt
+openssl dgst -sha256 -sign privateKey.pem -out signatureDer.txt message.txt
 ```
 
 It's time to verify:
 
 ```python
-publicKeyPem = open("publicKey.pem").read()
-signatureBin = open("signatureBinary.txt").read()
-message = open("message.txt").read()
+from ellipticcurve.ecdsa import Ecdsa
+from ellipticcurve.signature import Signature
+from ellipticcurve.publicKey import PublicKey
+from ellipticcurve.utils.file import File
+
+publicKeyPem = File.read("publicKey.pem")
+signatureDer = File.read("signatureDer.txt")
+message = File.read("message.txt")
 
 publicKey = PublicKey.fromPem(publicKeyPem)
-signature = Signature.fromDer(signatureBin)
+signature = Signature.fromDer(signatureDer)
 
 print Ecdsa.verify(message, signature, publicKey)
 ```
@@ -74,21 +82,24 @@ print Ecdsa.verify(message, signature, publicKey)
 You can also verify it on terminal:
 
 ```
-openssl dgst -sha256 -verify publicKey.pem -signature signatureBinary.txt message.txt
+openssl dgst -sha256 -verify publicKey.pem -signature signatureDer.txt message.txt
 ```
 
 NOTE: If you want to create a Digital Signature to use in the [Stark Bank], you need to convert the binary signature to base64.
 
 ```
-openssl base64 -in signatureBinary.txt -out signatureBase64.txt
+openssl base64 -in signatureDer.txt -out signatureBase64.txt
 ```
 
 With this library, you can do it:
 
 ```python
-signatureBin = open("signatureBinary.txt").read()
+from ellipticcurve.signature import Signature
+from ellipticcurve.utils.file import File
 
-signature = Signature.fromDer(signatureBin)
+signatureDer = File.read("signatureDer.txt")
+
+signature = Signature.fromDer(signatureDer)
 
 print signature.toBase64()
 ```

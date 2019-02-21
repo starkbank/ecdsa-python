@@ -26,13 +26,13 @@ class OpensslTest(TestCase):
     def testVerifySignature(self):
         # openssl ec -in privateKey.pem -pubout -out publicKey.pem
         publicKeyPem = open("publicKey.pem").read()
-        # openssl dgst -sha256 -sign privateKey.pem -out signature.binary message.txt
-        signatureBin = open("signature.binary").read()
+        # openssl dgst -sha256 -sign privateKey.pem -out signatureDer.txt message.txt
+        signatureDer = open("signatureDer.txt").read()
 
         message = open("message.txt").read()
 
         publicKey = PublicKey.fromPem(publicKeyPem)
 
-        signature = Signature.fromDer(string=signatureBin)
+        signature = Signature.fromDer(signatureDer)
 
         self.assertTrue(Ecdsa.verify(message=message, signature=signature, publicKey=publicKey))
