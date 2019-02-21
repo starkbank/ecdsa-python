@@ -1,7 +1,7 @@
 #
 # Elliptic Curve Equation
 #
-# y^2 = x^3 + a*x + b (mod p)
+# y^2 = x^3 + A*x + B (mod P)
 #
 
 from .point import Point

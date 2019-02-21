@@ -1,7 +1,7 @@
-from random import SystemRandom
-from .math import multiply
+from .math import Math
 from .curve import curvesByOid, supportedCurves
 from .utils.binary import BinaryAscii
+from .utils.integer import RandomInteger
 from .utils.der import fromPem, removeSequence, removeInteger, removeObject, removeOctetString, removeConstructed, toPem, encodeSequence, encodeInteger, encodeBitstring, encodeOid, encodeOctetString, encodeConstructed
 from .publicKey import PublicKey
 from .curve import secp256k1
@@ -11,11 +11,11 @@ class PrivateKey:
 
     def __init__(self, curve=secp256k1, secret=None):
         self.curve = curve
-        self.secret = secret or SystemRandom().randrange(1, curve.N)
+        self.secret = secret or RandomInteger.between(1, curve.N - 1)
 
     def publicKey(self):
         curve = self.curve
-        publicPoint = multiply(curve.G, n=self.secret, A=curve.A, P=curve.P, N=curve.N)
+        publicPoint = Math.multiply(curve.G, n=self.secret, A=curve.A, P=curve.P, N=curve.N)
         return PublicKey(point=publicPoint, curve=curve)
 
     def toString(self):
