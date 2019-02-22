@@ -9,7 +9,7 @@ class Ecdsa:
 
     @classmethod
     def sign(cls, message, privateKey, hashfunc=sha256):
-        hashMessage = hashfunc(message).digest()
+        hashMessage = hashfunc(message.encode()).digest()
         numberMessage = BinaryAscii.numberFromString(hashMessage)
         curve = privateKey.curve
         randNum = SystemRandom().randrange(1, curve.N)
@@ -20,7 +20,7 @@ class Ecdsa:
 
     @classmethod
     def verify(cls, message, signature, publicKey, hashfunc=sha256):
-        hashMessage = hashfunc(message).digest()
+        hashMessage = hashfunc(message.encode()).digest()
         numberMessage = BinaryAscii.numberFromString(hashMessage)
         curve = publicKey.curve
         r = signature.r

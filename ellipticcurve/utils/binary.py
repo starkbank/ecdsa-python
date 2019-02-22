@@ -1,4 +1,4 @@
-from binascii import hexlify, unhexlify
+from .compatibility import *
 
 
 class BinaryAscii:
@@ -12,7 +12,7 @@ class BinaryAscii:
         :param data: binary
         :return: hexadecimal string
         """
-        return hexlify(data)
+        return safeHexlify(data)
 
     @classmethod
     def binaryFromHex(cls, data):
@@ -23,7 +23,7 @@ class BinaryAscii:
         :param data: hexadecimal string
         :return: binary
         """
-        return unhexlify(data)
+        return safeFromHex(data)
 
     @classmethod
     def numberFromString(cls, string):
@@ -44,5 +44,6 @@ class BinaryAscii:
         :param length max number of character for the string
         :return: hexadecimal string
         """
+
         fmtStr = "%0" + str(2 * length) + "x"
         return cls.binaryFromHex((fmtStr % number).encode())

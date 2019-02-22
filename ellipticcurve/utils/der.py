@@ -1,10 +1,18 @@
+from .compatibility import *
+
 from .base import Base64
 from .binary import BinaryAscii
 
 
 def encodeSequence(*encodedPieces):
     totalLen = sum([len(p) for p in encodedPieces])
-    return "\x30" + encodeLength(totalLen) + "".join(encodedPieces)
+
+    if type(encodedPieces[0]) == str:
+        joined = toBytes("".join(encodedPieces))
+    else:
+        joined = b"".join(encodedPieces)
+
+    return b"\x30" + toBytes(encodeLength(totalLen)) + joined
 
 
 def encodeLength(length):
@@ -13,23 +21,25 @@ def encodeLength(length):
         return chr(length)
     s = ("%x" % length).encode()
     if len(s) % 2:
-        s = "0" + s
+        s = b"0" + s
     s = BinaryAscii.binaryFromHex(s)
     llen = len(s)
-    return chr(0x80 | llen) + s
+    return chr(0x80 | llen) + str(s)
 
 
 def encodeInteger(r):
     assert r >= 0
-    h = ("%x" % r).encode()
-    if len(h) % 2:
-        h = "0" + h
-    s = BinaryAscii.binaryFromHex(h)
-    num = s[0] if isinstance(s[0], (int, long)) else ord(s[0])
-    if num <= 0x7f:
-        return "\x02" + chr(len(s)) + s
+    t = ("%x" % r).encode()
 
-    return "\x02" + chr(len(s)+1) + "\x00" + s
+    if len(t) % 2:
+        t = b"0" + t
+    x = BinaryAscii.binaryFromHex(t)
+
+    num = x[0] if isinstance(x[0], int_types) else ord(x[0])
+    if num <= 0x7f:
+        return b"\x02" + toBytes(chr(len(x))) + x
+
+    return b"\x02" + toBytes(chr(len(x)+1)) + b"\x00" + x
 
 
 def encodeNumber(n):
@@ -51,20 +61,20 @@ def encodeOid(first, second, *pieces):
     return "\x06" + encodeLength(len(body)) + body
 
 
-def encodeBitstring(s):
-    return "\x03" + encodeLength(len(s)) + s
+def encodeBitstring(t):
+    return b"\x03" + toBytes(encodeLength(len(t))) + t
 
 
-def encodeOctetString(s):
-    return "\x04" + encodeLength(len(s)) + s
+def encodeOctetString(t):
+    return b"\x04" + toBytes(encodeLength(len(t))) + t
 
 
 def encodeConstructed(tag, value):
-    return chr(0xa0+tag) + encodeLength(len(value)) + value
+    return toBytes(chr(0xa0+tag)) + toBytes(encodeLength(len(value))) + toBytes(value)
 
 
 def readLength(string):
-    num = string[0] if isinstance(string[0], (int, long)) else ord(string[0])
+    num = string[0] if isinstance(string[0], int_types) else ord(string[0])
     if not (num & 0x80):
         return (num & 0x7f), 1
 
@@ -81,7 +91,7 @@ def readNumber(string):
         if llen > len(string):
             raise Exception("ran out of length bytes")
         number = number << 7
-        d = string[llen] if isinstance(string[llen], (int, long)) else ord(string[llen])
+        d = string[llen] if isinstance(string[llen], int_types) else ord(string[llen])
         number += (d & 0x7f)
         llen += 1
         if not d & 0x80:
@@ -90,29 +100,32 @@ def readNumber(string):
 
 
 def removeSequence(string):
-    if not string.startswith("\x30"):
-        n = string[0] if isinstance(string[0], (int, long)) else ord(string[0])
+    string = toBytes(string)
+
+    if not string.startswith(b"\x30"):
+        n = string[0] if isinstance(string[0], int_types) else ord(string[0])
         raise Exception("wanted sequence (0x30), got 0x%02x" % n)
     length, lengthlength = readLength(string[1:])
     endseq = 1+lengthlength+length
+
     return string[1+lengthlength:endseq], string[endseq:]
 
 
 def removeInteger(string):
-    if not string.startswith("\x02"):
-        n = string[0] if isinstance(string[0], (int, long)) else ord(string[0])
+    if not string.startswith(b"\x02"):
+        n = string[0] if isinstance(string[0], int_types) else ord(string[0])
         raise Exception("wanted integer (0x02), got 0x%02x" % n)
     length, llen = readLength(string[1:])
     numberbytes = string[1+llen:1+llen+length]
     rest = string[1+llen+length:]
-    nbytes = numberbytes[0] if isinstance(numberbytes[0], (int, long)) else ord(numberbytes[0])
+    nbytes = numberbytes[0] if isinstance(numberbytes[0], int_types) else ord(numberbytes[0])
     assert nbytes < 0x80
     return int(BinaryAscii.hexFromBinary(numberbytes), 16), rest
 
 
 def removeObject(string):
-    if not string.startswith("\x06"):
-        n = string[0] if isinstance(string[0], (int, long)) else ord(string[0])
+    if not string.startswith(b"\x06"):
+        n = string[0] if isinstance(string[0], int_types) else ord(string[0])
         raise Exception("wanted object (0x06), got 0x%02x" % n)
     length, lengthlength = readLength(string[1:])
     body = string[1 + lengthlength:1 + lengthlength + length]
@@ -127,12 +140,13 @@ def removeObject(string):
     second = n0 - (40 * first)
     numbers.insert(0, first)
     numbers.insert(1, second)
+
     return tuple(numbers), rest
 
 
 def removeBitString(string):
-    num = string[0] if isinstance(string[0], (int, long)) else ord(string[0])
-    if not string.startswith("\x03"):
+    num = string[0] if isinstance(string[0], int_types) else ord(string[0])
+    if not string.startswith(b"\x03"):
         raise Exception("wanted bitstring (0x03), got 0x%02x" % num)
     length, llen = readLength(string[1:])
     body = string[1 + llen:1 + llen + length]
@@ -141,8 +155,8 @@ def removeBitString(string):
 
 
 def removeOctetString(string):
-    if not string.startswith("\x04"):
-        n = string[0] if isinstance(string[0], (int, long)) else ord(string[0])
+    if not string.startswith(b"\x04"):
+        n = string[0] if isinstance(string[0], int_types) else ord(string[0])
         raise Exception("wanted octetstring (0x04), got 0x%02x" % n)
     length, llen = readLength(string[1:])
     body = string[1+llen:1+llen+length]
@@ -151,7 +165,7 @@ def removeOctetString(string):
 
 
 def removeConstructed(string):
-    s0 = string[0] if isinstance(string[0], (int, long)) else ord(string[0])
+    s0 = string[0] if isinstance(string[0], int_types) else ord(string[0])
     if (s0 & 0xe0) != 0xa0:
         raise Exception("wanted constructed tag (0xa0-0xbf), got 0x%02x" % s0)
     tag = s0 & 0x1f
@@ -162,15 +176,16 @@ def removeConstructed(string):
 
 
 def fromPem(pem):
-    if isinstance(pem, unicode):
-        pem = pem.encode()
-    d = "".join([l.strip() for l in pem.split("\n") if l and not l.startswith("-----")])
-    return Base64.decode(d)
+    pem = toBytes(pem)
+    t = b"".join([l.strip() for l in pem.split(b"\n") if l and not l.startswith(b"-----")])
+    return Base64.decode(t)
 
 
 def toPem(der, name):
+    name = toBytes(name)
+
     b64 = Base64.encode(der)
-    lines = [("-----BEGIN {name}-----\n".format(name=name)).encode()]
-    lines.extend(["{content}\n".format(content=b64[start:start+64]) for start in xrange(0, len(b64), 64)])
-    lines.append(("-----END {name}-----\n".format(name=name)).encode())
-    return "".join(lines)
+    lines = [(b"-----BEGIN " + name  + b"-----\n")]
+    lines.extend([b64[start:start+64] + b'\n' for start in xrange(0, len(b64), 64)])
+    lines.append(b"-----END " + name + b"-----\n")
+    return b"".join(lines)
