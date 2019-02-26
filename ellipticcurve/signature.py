@@ -18,11 +18,11 @@ class Signature:
     @classmethod
     def fromDer(cls, string):
         rs, empty = removeSequence(string)
-        if empty not in ["", b""]:
+        if len(empty) != 0:
             raise Exception("trailing junk after DER sig: %s" % BinaryAscii.hexFromBinary(empty))
         r, rest = removeInteger(rs)
         s, empty = removeInteger(rest)
-        if empty not in ["", b""]:
+        if len(empty) != 0:
             raise Exception("trailing junk after DER numbers: %s" % BinaryAscii.hexFromBinary(empty))
         return Signature(r, s)
 

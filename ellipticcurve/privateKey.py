@@ -45,7 +45,7 @@ class PrivateKey:
     @classmethod
     def fromDer(cls, string):
         t, empty = removeSequence(string)
-        if empty not in ["", b""]:
+        if len(empty) != 0:
             raise Exception("trailing junk after DER privkey: %s" % BinaryAscii.hexFromBinary(empty))
 
         one, t = removeInteger(t)
@@ -59,7 +59,7 @@ class PrivateKey:
 
         oidCurve, empty = removeObject(curveOidStr)
 
-        if empty not in ["", b""]:
+        if len(empty) != 0:
             raise Exception("trailing junk after DER privkey curve_oid: %s" % BinaryAscii.hexFromBinary(empty))
 
         curve = curvesByOid.get(oidCurve)
