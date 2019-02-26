@@ -37,7 +37,7 @@ from ellipticcurve.privateKey import PrivateKey
 privateKey = PrivateKey()
 publicKey = privateKey.publicKey()
 
-message = u"My test message"
+message = "My test message"
 
 # Generate Signature
 signature = Ecdsa.sign(message, privateKey)
