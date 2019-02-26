@@ -37,13 +37,13 @@ from ellipticcurve.privateKey import PrivateKey
 privateKey = PrivateKey()
 publicKey = privateKey.publicKey()
 
-message = "My test message"
+message = u"My test message"
 
 # Generate Signature
 signature = Ecdsa.sign(message, privateKey)
 
 # Verify if signature is valid
-print Ecdsa.verify(message, signature, publicKey)
+print(Ecdsa.verify(message, signature, publicKey))
 ```
 
 ### OpenSSL
@@ -78,7 +78,7 @@ publicKeyPem = open("publicKey.pem").read()
 publicKey = PublicKey.fromPem(publicKeyPem)
 signature = Signature.fromDer(signatureDer)
 
-print Ecdsa.verify(message, signature, publicKey)
+print(Ecdsa.verify(message, signature, publicKey))
 ```
 
 You can also verify it on terminal:
@@ -102,7 +102,7 @@ signatureDer = File.read("signatureDer.txt")
 
 signature = Signature.fromDer(signatureDer)
 
-print signature.toBase64()
+print(signature.toBase64())
 ```
 
 [Stark Bank]: https://starkbank.com

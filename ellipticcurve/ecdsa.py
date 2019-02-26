@@ -1,3 +1,5 @@
+from .utils.compatibility import *
+
 from hashlib import sha256
 from .signature import Signature
 from .math import Math
@@ -9,7 +11,7 @@ class Ecdsa:
 
     @classmethod
     def sign(cls, message, privateKey, hashfunc=sha256):
-        hashMessage = hashfunc(message.encode()).digest()
+        hashMessage = hashfunc(toBytes(message)).digest()
         numberMessage = BinaryAscii.numberFromString(hashMessage)
         curve = privateKey.curve
         randNum = RandomInteger.between(1, curve.N - 1)
@@ -20,7 +22,7 @@ class Ecdsa:
 
     @classmethod
     def verify(cls, message, signature, publicKey, hashfunc=sha256):
-        hashMessage = hashfunc(message.encode()).digest()
+        hashMessage = hashfunc(toBytes(message)).digest()
         numberMessage = BinaryAscii.numberFromString(hashMessage)
         curve = publicKey.curve
         r = signature.r
