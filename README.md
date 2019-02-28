@@ -71,7 +71,7 @@ from ellipticcurve.utils.file import File
 
 publicKeyPem = File.read("publicKey.pem")
 signatureDer = File.read("signatureDer.txt")
-message = File.read("message.txt")
+message = open("message.txt", 'r').read()
 
 publicKeyPem = open("publicKey.pem").read()
 
