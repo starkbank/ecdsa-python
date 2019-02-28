@@ -25,7 +25,6 @@ class PrivateKey:
 
     def toDer(self):
         encodedPublicKey = self.publicKey().toString(encoded=True)
-
         return encodeSequence(
             encodeInteger(1),
             encodeOctetString(self.toString()),
@@ -38,8 +37,7 @@ class PrivateKey:
 
     @classmethod
     def fromPem(cls, string):
-        string = toBytes(string)
-        privkeyPem = string[string.index(b"-----BEGIN EC PRIVATE KEY-----"):]
+        privkeyPem = string[string.index("-----BEGIN EC PRIVATE KEY-----"):]
         return cls.fromDer(fromPem(privkeyPem))
 
     @classmethod

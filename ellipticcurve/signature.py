@@ -1,3 +1,5 @@
+from .utils.compatibility import *
+
 from .utils.base import Base64
 from .utils.binary import BinaryAscii
 from .utils.der import encodeSequence, encodeInteger, removeSequence, removeInteger

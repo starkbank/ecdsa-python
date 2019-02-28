@@ -1,3 +1,5 @@
+from .utils.compatibility import *
+
 from .point import Point
 from .curve import curvesByOid, supportedCurves, secp256k1
 from .utils.der import fromPem, removeSequence, removeObject, removeBitString, toPem, encodeSequence, encodeOid, encodeBitstring
@@ -14,7 +16,7 @@ class PublicKey:
         Xstr = BinaryAscii.stringFromNumber(number=self.point.x, length=self.curve.length())
         Ystr = BinaryAscii.stringFromNumber(number=self.point.y, length=self.curve.length())
 
-        return Xstr + Ystr if not encoded else b"\x00\x04" + Xstr + Ystr
+        return Xstr + Ystr if not encoded else toBytes("\x00\x04") + Xstr + Ystr
 
     def toDer(self):
         oidEcPublicKey = (1, 2, 840, 10045, 2, 1)
@@ -35,7 +37,9 @@ class PublicKey:
             raise Exception("trailing junk after DER pubkey: {}".format(BinaryAscii.hexFromBinary(empty)))
         s2, pointStrBitstring = removeSequence(s1)
 
+
         oidPk, rest = removeObject(s2)
+        
         oidCurve, empty = removeObject(rest)
         if len(empty) != 0:
             raise Exception("trailing junk after DER pubkey objects: {}".format(BinaryAscii.hexFromBinary(empty)))
