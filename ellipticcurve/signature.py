@@ -12,7 +12,6 @@ class Signature:
         self.s = s
 
     def toDer(self):
-        # replace by latinize
         return toLatin(encodeSequence(encodeInteger(self.r), encodeInteger(self.s)))
 
     def toBase64(self):
