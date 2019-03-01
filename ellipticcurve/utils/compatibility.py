@@ -9,6 +9,12 @@ if sys.version_info.major == 3:
     string_types = (str)
     int_types = (int, float)
 
+    def toLatin(string):
+        return str(string, 'latin-1')
+
+    def fromLatin(string):
+        return bytes(string, 'latin-1')
+
     def safeFromHex(s):
         return bytes.fromhex(s.decode())
 
@@ -24,6 +30,12 @@ else:
     # py2 constants and conversion functions
     string_types = (str, unicode)
     int_types = (int, float, long)
+
+    def toLatin(string):
+        return string
+
+    def fromLatin(string):
+        return string
 
     def toString(string):
         return string

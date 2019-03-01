@@ -1,3 +1,7 @@
+# coding=utf-8
+
+from ellipticcurve.utils.compatibility import *
+
 from unittest.case import TestCase
 from ellipticcurve.ecdsa import Ecdsa
 from ellipticcurve.privateKey import PrivateKey
@@ -13,8 +17,7 @@ class SignatureTest(TestCase):
         signature1 = Ecdsa.sign(message, privateKey)
 
         der = signature1.toDer()
-
-        signature2 = Signature.fromDer(der)
+        signature2 = Signature.fromDer(fromLatin(der))
 
         self.assertEqual(signature1.r, signature2.r)
         self.assertEqual(signature1.s, signature2.s)

@@ -16,15 +16,15 @@ class PublicKey:
         Xstr = BinaryAscii.stringFromNumber(number=self.point.x, length=self.curve.length())
         Ystr = BinaryAscii.stringFromNumber(number=self.point.y, length=self.curve.length())
 
-        return Xstr + Ystr if not encoded else toBytes("\x00\x04") + Xstr + Ystr
+        return toLatin(Xstr + Ystr) if not encoded else toBytes("\x00\x04") + Xstr + Ystr
 
     def toDer(self):
         oidEcPublicKey = (1, 2, 840, 10045, 2, 1)
         encodeEcAndOid = encodeSequence(encodeOid(*oidEcPublicKey), encodeOid(*self.curve.oid))
-        return encodeSequence(encodeEcAndOid, encodeBitstring(self.toString(encoded=True)))
+        return toLatin(encodeSequence(encodeEcAndOid, encodeBitstring(self.toString(encoded=True))))
 
     def toPem(self):
-        return toPem(der=self.toDer(), name="PUBLIC KEY")
+        return toPem(der=fromLatin(self.toDer()), name="PUBLIC KEY")
 
     @classmethod
     def fromPem(cls, string):

@@ -21,19 +21,19 @@ class PrivateKey:
         return PublicKey(point=publicPoint, curve=curve)
 
     def toString(self):
-        return BinaryAscii.stringFromNumber(number=self.secret, length=self.curve.length())
+        return toLatin(BinaryAscii.stringFromNumber(number=self.secret, length=self.curve.length()))
 
     def toDer(self):
         encodedPublicKey = self.publicKey().toString(encoded=True)
-        return encodeSequence(
+        return toLatin(encodeSequence(
             encodeInteger(1),
-            encodeOctetString(self.toString()),
+            encodeOctetString(fromLatin(self.toString())),
             encodeConstructed(0, encodeOid(*self.curve.oid)),
             encodeConstructed(1, encodeBitstring(encodedPublicKey)),
-        )
+        ))
 
     def toPem(self):
-        return toPem(der=self.toDer(), name="EC PRIVATE KEY")
+        return toPem(der=fromLatin(self.toDer()), name="EC PRIVATE KEY")
 
     @classmethod
     def fromPem(cls, string):
