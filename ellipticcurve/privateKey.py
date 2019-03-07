@@ -1,7 +1,9 @@
+from .utils.compatibility import *
+
+from random import SystemRandom
 from .math import Math
 from .curve import curvesByOid, supportedCurves
 from .utils.binary import BinaryAscii
-from .utils.integer import RandomInteger
 from .utils.der import fromPem, removeSequence, removeInteger, removeObject, removeOctetString, removeConstructed, toPem, encodeSequence, encodeInteger, encodeBitstring, encodeOid, encodeOctetString, encodeConstructed
 from .publicKey import PublicKey
 from .curve import secp256k1
@@ -11,7 +13,7 @@ class PrivateKey:
 
     def __init__(self, curve=secp256k1, secret=None):
         self.curve = curve
-        self.secret = secret or RandomInteger.between(1, curve.N - 1)
+        self.secret = secret or SystemRandom().randrange(1, curve.N)
 
     def publicKey(self):
         curve = self.curve
@@ -19,19 +21,19 @@ class PrivateKey:
         return PublicKey(point=publicPoint, curve=curve)
 
     def toString(self):
-        return BinaryAscii.stringFromNumber(number=self.secret, length=self.curve.length())
+        return toLatin(BinaryAscii.stringFromNumber(number=self.secret, length=self.curve.length()))
 
     def toDer(self):
         encodedPublicKey = self.publicKey().toString(encoded=True)
-        return encodeSequence(
+        return toLatin(encodeSequence(
             encodeInteger(1),
-            encodeOctetString(self.toString()),
+            encodeOctetString(fromLatin(self.toString())),
             encodeConstructed(0, encodeOid(*self.curve.oid)),
             encodeConstructed(1, encodeBitstring(encodedPublicKey)),
-        )
+        ))
 
     def toPem(self):
-        return toPem(der=self.toDer(), name="EC PRIVATE KEY")
+        return toPem(der=fromLatin(self.toDer()), name="EC PRIVATE KEY")
 
     @classmethod
     def fromPem(cls, string):
@@ -40,21 +42,22 @@ class PrivateKey:
 
     @classmethod
     def fromDer(cls, string):
-        s, empty = removeSequence(string)
-        if empty != "":
+        t, empty = removeSequence(string)
+        if len(empty) != 0:
             raise Exception("trailing junk after DER privkey: %s" % BinaryAscii.hexFromBinary(empty))
 
-        one, s = removeInteger(s)
+        one, t = removeInteger(t)
         if one != 1:
             raise Exception("expected '1' at start of DER privkey, got %d" % one)
 
-        privkeyStr, s = removeOctetString(s)
-        tag, curveOidStr, s = removeConstructed(s)
+        privkeyStr, t = removeOctetString(t)
+        tag, curveOidStr, t = removeConstructed(t)
         if tag != 0:
             raise Exception("expected tag 0 in DER privkey, got %d" % tag)
 
         oidCurve, empty = removeObject(curveOidStr)
-        if empty != "":
+
+        if len(empty) != 0:
             raise Exception("trailing junk after DER privkey curve_oid: %s" % BinaryAscii.hexFromBinary(empty))
 
         curve = curvesByOid.get(oidCurve)

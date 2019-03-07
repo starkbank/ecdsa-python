@@ -7,7 +7,7 @@ We tried other Python libraries such as [python-ecdsa], [fast-ecdsa] and others 
 [python-ecdsa]: https://github.com/warner/python-ecdsa
 [fast-ecdsa]: https://github.com/AntonKueltz/fastecdsa
 
-For this reason, we decided to create something simple, compatible with OpenSSL and fast using some elegant math as Jacobian Coordinates to speed up the ECDSA.
+For this reason, we decided to create something simple, compatible with OpenSSL and fast using some elegant math as Jacobian Coordinates to speed up the ECDSA. Starkbank-EDCSA is fully compatible with Python2 and Python3.
 
 ### Curves
 
@@ -43,7 +43,7 @@ message = "My test message"
 signature = Ecdsa.sign(message, privateKey)
 
 # Verify if signature is valid
-print Ecdsa.verify(message, signature, publicKey)
+print(Ecdsa.verify(message, signature, publicKey))
 ```
 
 ### OpenSSL
@@ -71,12 +71,14 @@ from ellipticcurve.utils.file import File
 
 publicKeyPem = File.read("publicKey.pem")
 signatureDer = File.read("signatureDer.txt")
-message = File.read("message.txt")
+message = open("message.txt", 'r').read()
+
+publicKeyPem = open("publicKey.pem").read()
 
 publicKey = PublicKey.fromPem(publicKeyPem)
 signature = Signature.fromDer(signatureDer)
 
-print Ecdsa.verify(message, signature, publicKey)
+print(Ecdsa.verify(message, signature, publicKey))
 ```
 
 You can also verify it on terminal:
@@ -96,12 +98,11 @@ With this library, you can do it:
 ```python
 from ellipticcurve.signature import Signature
 from ellipticcurve.utils.file import File
-
 signatureDer = File.read("signatureDer.txt")
 
 signature = Signature.fromDer(signatureDer)
 
-print signature.toBase64()
+print(signature.toBase64())
 ```
 
 [Stark Bank]: https://starkbank.com
@@ -115,5 +116,6 @@ pip install starkbank-ecdsa
 ### Run all unit tests
 
 ```
-cd tests && python -m unittest discover -p 'test*.py' && cd ..
+python3 -m unittest discover
+python2 -m unittest discover
 ```
