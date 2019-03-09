@@ -1,5 +1,4 @@
 from .utils.compatibility import *
-
 from random import SystemRandom
 from .math import Math
 from .curve import curvesByOid, supportedCurves

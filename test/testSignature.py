@@ -1,11 +1,10 @@
 # coding=utf-8
 
-from ellipticcurve.utils.compatibility import *
-
 from unittest.case import TestCase
 from ellipticcurve.ecdsa import Ecdsa
 from ellipticcurve.privateKey import PrivateKey
 from ellipticcurve.signature import Signature
+from ellipticcurve.utils.compatibility import *
 
 
 class SignatureTest(TestCase):

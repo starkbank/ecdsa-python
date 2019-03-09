@@ -1,5 +1,4 @@
 from .utils.compatibility import *
-
 from .point import Point
 from .curve import curvesByOid, supportedCurves, secp256k1
 from .utils.der import fromPem, removeSequence, removeObject, removeBitString, toPem, encodeSequence, encodeOid, encodeBitstring

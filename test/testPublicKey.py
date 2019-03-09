@@ -1,10 +1,9 @@
 # coding=utf-8
 
-from ellipticcurve.utils.compatibility import *
-
 from unittest.case import TestCase
 from ellipticcurve.privateKey import PrivateKey
 from ellipticcurve.publicKey import PublicKey
+from ellipticcurve.utils.compatibility import *
 
 
 class PublicKeyTest(TestCase):

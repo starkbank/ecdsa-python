@@ -1,5 +1,4 @@
 from .utils.compatibility import *
-
 from hashlib import sha256
 from .signature import Signature
 from .math import Math

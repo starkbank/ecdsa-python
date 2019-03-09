@@ -1,7 +1,6 @@
-from .compatibility import *
-
 from .base import Base64
 from .binary import BinaryAscii
+from .compatibility import *
 
 
 def encodeSequence(*encodedPieces):
