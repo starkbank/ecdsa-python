@@ -116,9 +116,9 @@ from ellipticcurve.utils.file import File
 
 publicKeyPem = File.read("publicKey.pem")
 signatureDer = File.read("signatureDer.txt")
-message = open("message.txt", 'r').read()
+message = File.read("message.txt")
 
-publicKeyPem = open("publicKey.pem").read()
+publicKeyPem = File.read("publicKey.pem")
 
 publicKey = PublicKey.fromPem(publicKeyPem)
 signature = Signature.fromDer(signatureDer)
