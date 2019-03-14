@@ -115,7 +115,7 @@ from ellipticcurve.publicKey import PublicKey
 from ellipticcurve.utils.file import File
 
 publicKeyPem = File.read("publicKey.pem")
-signatureDer = File.read("signatureDer.txt")
+signatureDer = File.read("signatureDer.txt", "rb")
 message = File.read("message.txt")
 
 publicKeyPem = File.read("publicKey.pem")
@@ -143,7 +143,7 @@ With this library, you can do it:
 ```python
 from ellipticcurve.signature import Signature
 from ellipticcurve.utils.file import File
-signatureDer = File.read("signatureDer.txt")
+signatureDer = File.read("signatureDer.txt", "rb")
 
 signature = Signature.fromDer(signatureDer)
 

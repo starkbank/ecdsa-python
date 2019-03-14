@@ -11,10 +11,10 @@ class Signature:
         self.s = s
 
     def toDer(self):
-        return toLatin(encodeSequence(encodeInteger(self.r), encodeInteger(self.s)))
+        return encodeSequence(encodeInteger(self.r), encodeInteger(self.s))
 
     def toBase64(self):
-        return toLatin(Base64.encode(fromLatin(self.toDer())))
+        return toString(Base64.encode(toBytes(self.toDer())))
 
     @classmethod
     def fromDer(cls, string):

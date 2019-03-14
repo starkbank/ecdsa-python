@@ -1,18 +1,17 @@
+from .utils.integer import RandomInteger
 from .utils.compatibility import *
-from random import SystemRandom
-from .math import Math
-from .curve import curvesByOid, supportedCurves
 from .utils.binary import BinaryAscii
 from .utils.der import fromPem, removeSequence, removeInteger, removeObject, removeOctetString, removeConstructed, toPem, encodeSequence, encodeInteger, encodeBitstring, encodeOid, encodeOctetString, encodeConstructed
 from .publicKey import PublicKey
-from .curve import secp256k1
+from .curve import secp256k1, curvesByOid, supportedCurves
+from .math import Math
 
 
 class PrivateKey:
 
     def __init__(self, curve=secp256k1, secret=None):
         self.curve = curve
-        self.secret = secret or SystemRandom().randrange(1, curve.N)
+        self.secret = secret or RandomInteger.between(1, curve.N - 1)
 
     def publicKey(self):
         curve = self.curve
@@ -20,19 +19,19 @@ class PrivateKey:
         return PublicKey(point=publicPoint, curve=curve)
 
     def toString(self):
-        return toLatin(BinaryAscii.stringFromNumber(number=self.secret, length=self.curve.length()))
+        return BinaryAscii.stringFromNumber(number=self.secret, length=self.curve.length())
 
     def toDer(self):
         encodedPublicKey = self.publicKey().toString(encoded=True)
-        return toLatin(encodeSequence(
+        return encodeSequence(
             encodeInteger(1),
-            encodeOctetString(fromLatin(self.toString())),
+            encodeOctetString(self.toString()),
             encodeConstructed(0, encodeOid(*self.curve.oid)),
             encodeConstructed(1, encodeBitstring(encodedPublicKey)),
-        ))
+        )
 
     def toPem(self):
-        return toPem(der=fromLatin(self.toDer()), name="EC PRIVATE KEY")
+        return toPem(der=toBytes(self.toDer()), name="EC PRIVATE KEY")
 
     @classmethod
     def fromPem(cls, string):

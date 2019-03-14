@@ -12,7 +12,7 @@ class BinaryAscii:
         :param data: binary
         :return: hexadecimal string
         """
-        return safeHexlify(data)
+        return safeHexFromBinary(data)
 
     @classmethod
     def binaryFromHex(cls, data):
@@ -23,7 +23,7 @@ class BinaryAscii:
         :param data: hexadecimal string
         :return: binary
         """
-        return safeFromHex(data)
+        return safeBinaryFromHex(data)
 
     @classmethod
     def numberFromString(cls, string):
@@ -46,4 +46,4 @@ class BinaryAscii:
         """
 
         fmtStr = "%0" + str(2 * length) + "x"
-        return cls.binaryFromHex((fmtStr % number).encode())
+        return toString(cls.binaryFromHex((fmtStr % number).encode()))

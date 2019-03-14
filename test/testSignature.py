@@ -16,7 +16,7 @@ class SignatureTest(TestCase):
         signature1 = Ecdsa.sign(message, privateKey)
 
         der = signature1.toDer()
-        signature2 = Signature.fromDer(fromLatin(der))
+        signature2 = Signature.fromDer(toBytes(der))
 
         self.assertEqual(signature1.r, signature2.r)
         self.assertEqual(signature1.s, signature2.s)

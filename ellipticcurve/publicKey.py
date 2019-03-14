@@ -1,8 +1,8 @@
 from .utils.compatibility import *
-from .point import Point
-from .curve import curvesByOid, supportedCurves, secp256k1
 from .utils.der import fromPem, removeSequence, removeObject, removeBitString, toPem, encodeSequence, encodeOid, encodeBitstring
 from .utils.binary import BinaryAscii
+from .point import Point
+from .curve import curvesByOid, supportedCurves, secp256k1
 
 
 class PublicKey:
@@ -14,16 +14,15 @@ class PublicKey:
     def toString(self, encoded=False):
         Xstr = BinaryAscii.stringFromNumber(number=self.point.x, length=self.curve.length())
         Ystr = BinaryAscii.stringFromNumber(number=self.point.y, length=self.curve.length())
-
-        return toLatin(Xstr + Ystr) if not encoded else toBytes("\x00\x04") + Xstr + Ystr
+        return Xstr + Ystr if not encoded else "\x00\x04" + Xstr + Ystr
 
     def toDer(self):
         oidEcPublicKey = (1, 2, 840, 10045, 2, 1)
         encodeEcAndOid = encodeSequence(encodeOid(*oidEcPublicKey), encodeOid(*self.curve.oid))
-        return toLatin(encodeSequence(encodeEcAndOid, encodeBitstring(self.toString(encoded=True))))
+        return encodeSequence(encodeEcAndOid, encodeBitstring(self.toString(encoded=True)))
 
     def toPem(self):
-        return toPem(der=fromLatin(self.toDer()), name="PUBLIC KEY")
+        return toPem(der=toBytes(self.toDer()), name="PUBLIC KEY")
 
     @classmethod
     def fromPem(cls, string):

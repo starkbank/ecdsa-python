@@ -1,4 +1,3 @@
-from .utils.compatibility import *
 from hashlib import sha256
 from .signature import Signature
 from .math import Math
@@ -24,10 +23,10 @@ class Ecdsa:
         hashMessage = hashfunc(message.encode()).digest()
         numberMessage = BinaryAscii.numberFromString(hashMessage)
         curve = publicKey.curve
-        sigr = signature.r
-        sigs = signature.s
-        invw = Math.inv(sigs, curve.N)
-        u1 = Math.multiply(curve.G, n=(numberMessage * invw) % curve.N, A=curve.A, P=curve.P, N=curve.N)
-        u2 = Math.multiply(publicKey.point, n=(sigr * invw) % curve.N, A=curve.A, P=curve.P, N=curve.N)
-        addp = Math.add(u1, u2, P=curve.P, A=curve.A)
-        return sigr == addp.x
+        sigR = signature.r
+        sigS = signature.s
+        inv = Math.inv(sigS, curve.N)
+        u1 = Math.multiply(curve.G, n=(numberMessage * inv) % curve.N, A=curve.A, P=curve.P, N=curve.N)
+        u2 = Math.multiply(publicKey.point, n=(sigR * inv) % curve.N, A=curve.A, P=curve.P, N=curve.N)
+        add = Math.add(u1, u2, P=curve.P, A=curve.A)
+        return sigR == add.x

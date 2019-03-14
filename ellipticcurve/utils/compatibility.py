@@ -1,41 +1,29 @@
-import sys, os
-import binascii
+from sys import version_info as pyVersion
+from binascii import hexlify, unhexlify
 
 
-if sys.version_info.major == 3:
+if pyVersion.major == 3:
     # py3 constants and conversion functions
 
     xrange = range
-    string_types = (str)
-    int_types = (int, float)
-
-    def toLatin(string):
-        return str(string, 'latin-1')
-
-    def fromLatin(string):
-        return bytes(string, 'latin-1')
-
-    def safeFromHex(s):
-        return bytes.fromhex(s.decode())
-
-    def safeHexlify(a):
-        return str(binascii.hexlify(a), 'utf-8')
+    stringTypes = (str)
+    intTypes = (int, float)
 
     def toString(string):
-        return string.decode('utf-8')
+        return string.decode("latin-1")
 
     def toBytes(string):
-        return string.encode('latin-1')
+        return string.encode("latin-1")
+
+    def safeBinaryFromHex(hexString):
+        return unhexlify(hexString)
+
+    def safeHexFromBinary(byteString):
+        return hexlify(byteString)
 else:
     # py2 constants and conversion functions
-    string_types = (str, unicode)
-    int_types = (int, float, long)
-
-    def toLatin(string):
-        return string
-
-    def fromLatin(string):
-        return string
+    stringTypes = (str, unicode)
+    intTypes = (int, float, long)
 
     def toString(string):
         return string
@@ -43,8 +31,8 @@ else:
     def toBytes(string):
         return string
 
-    def safeFromHex(s):
-        return s.decode('hex')
+    def safeBinaryFromHex(hexString):
+        return unhexlify(hexString)
 
-    def safeHexlify(a):
-        return binascii.hexlify(a)
+    def safeHexFromBinary(byteString):
+        return hexlify(byteString)
