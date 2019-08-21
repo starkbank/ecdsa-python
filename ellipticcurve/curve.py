@@ -9,13 +9,14 @@ from .point import Point
 
 class CurveFp:
 
-    def __init__(self, A, B, P, N, Gx, Gy, name, oid):
+    def __init__(self, A, B, P, N, Gx, Gy, name, oid, nistName=None):
         self.A = A
         self.B = B
         self.P = P
         self.N = N
         self.G = Point(Gx, Gy)
         self.name = name
+        self.nistName = nistName
         self.oid = oid
 
     def contains(self, p):
@@ -43,7 +44,8 @@ secp256k1 = CurveFp(
 )
 
 prime256v1 = CurveFp(
-    name="prime256v1 (NIST P-256)",
+    name="prime256v1",
+    nistName="P-256",
     A=0xffffffff00000001000000000000000000000000fffffffffffffffffffffffc,
     B=0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b,
     P=0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff,
