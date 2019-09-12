@@ -1,5 +1,5 @@
 from os import path
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 with open(path.join(path.dirname(__file__), "README.md")) as readme:
     README = readme.read()
@@ -15,7 +15,7 @@ setup(
     author="Stark Bank",
     author_email="developers@starkbank.com",
     keywords=["ecdsa", "elliptic curve", "elliptic", "curve", "stark bank", "starkbank", "cryptograph"],
-    version = "0.1.4"
+    version="0.1.5"
 )
 
 # python setup.py sdist upload -r pypi

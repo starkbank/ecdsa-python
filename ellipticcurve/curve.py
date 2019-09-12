@@ -9,13 +9,14 @@ from .point import Point
 
 class CurveFp:
 
-    def __init__(self, A, B, P, N, Gx, Gy, name, oid):
+    def __init__(self, A, B, P, N, Gx, Gy, name, oid, nistName=None):
         self.A = A
         self.B = B
         self.P = P
         self.N = N
         self.G = Point(Gx, Gy)
         self.name = name
+        self.nistName = nistName
         self.oid = oid
 
     def contains(self, p):
@@ -42,8 +43,22 @@ secp256k1 = CurveFp(
     oid=(1, 3, 132, 0, 10)
 )
 
+prime256v1 = CurveFp(
+    name="prime256v1",
+    nistName="P-256",
+    A=0xffffffff00000001000000000000000000000000fffffffffffffffffffffffc,
+    B=0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b,
+    P=0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff,
+    N=0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551,
+    Gx=0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296,
+    Gy=0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5,
+    oid=(1, 2, 840, 10045, 3, 1, 7),
+)
+p256 = prime256v1
+
 supportedCurves = [
-    secp256k1
+    secp256k1,
+    prime256v1,
 ]
 
 curvesByOid = {curve.oid: curve for curve in supportedCurves}
