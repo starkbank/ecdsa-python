@@ -18,7 +18,19 @@ setup(
     author="Stark Bank",
     author_email="developers@starkbank.com",
     keywords=["ecdsa", "elliptic curve", "elliptic", "curve", "stark bank", "starkbank", "cryptograph"],
-    version="0.1.6"
+    version="0.1.7"
 )
 
-# python setup.py sdist upload -r pypi
+
+### Create a source distribution:
+
+#Run ```python setup.py sdist``` inside the project directory.
+
+### Install twine:
+
+#```pip install twine```
+
+### Upload package to pypi:
+
+#```twine upload dist/*```
+
