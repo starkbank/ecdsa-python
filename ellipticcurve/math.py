@@ -102,18 +102,22 @@ class Math:
         :param A: Coefficient of the first-order term of the equation Y^2 = X^3 + A*X + B (mod p)
         :return: Point that represents the sum of First and Second Point
         """
+
         if not p.y:
             return q
         if not q.y:
             return p
+
         U1 = (p.x * q.z ** 2) % P
         U2 = (q.x * p.z ** 2) % P
         S1 = (p.y * q.z ** 3) % P
         S2 = (q.y * p.z ** 3) % P
+
         if U1 == U2:
             if S1 != S2:
                 return Point(0, 0, 1)
             return cls.jacobianDouble(p, A, P)
+
         H = U2 - U1
         R = S2 - S1
         H2 = (H * H) % P
@@ -122,6 +126,7 @@ class Math:
         nx = (R ** 2 - H3 - 2 * U1H2) % P
         ny = (R * (U1H2 - nx) - S1 * H3) % P
         nz = (H * p.z * q.z) % P
+
         return Point(nx, ny, nz)
 
     @classmethod

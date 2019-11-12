@@ -23,6 +23,7 @@ class PrivateKey:
 
     def toDer(self):
         encodedPublicKey = self.publicKey().toString(encoded=True)
+
         return encodeSequence(
             encodeInteger(1),
             encodeOctetString(self.toString()),
@@ -35,28 +36,28 @@ class PrivateKey:
 
     @classmethod
     def fromPem(cls, string):
-        privkeyPem = string[string.index("-----BEGIN EC PRIVATE KEY-----"):]
-        return cls.fromDer(fromPem(privkeyPem))
+        privateKeyPem = string[string.index("-----BEGIN EC PRIVATE KEY-----"):]
+        return cls.fromDer(fromPem(privateKeyPem))
 
     @classmethod
     def fromDer(cls, string):
         t, empty = removeSequence(string)
         if len(empty) != 0:
-            raise Exception("trailing junk after DER privkey: %s" % BinaryAscii.hexFromBinary(empty))
+            raise Exception("trailing junk after DER private key: %s" % BinaryAscii.hexFromBinary(empty))
 
         one, t = removeInteger(t)
         if one != 1:
-            raise Exception("expected '1' at start of DER privkey, got %d" % one)
+            raise Exception("expected '1' at start of DER private key, got %d" % one)
 
-        privkeyStr, t = removeOctetString(t)
+        privateKeyStr, t = removeOctetString(t)
         tag, curveOidStr, t = removeConstructed(t)
         if tag != 0:
-            raise Exception("expected tag 0 in DER privkey, got %d" % tag)
+            raise Exception("expected tag 0 in DER private key, got %d" % tag)
 
         oidCurve, empty = removeObject(curveOidStr)
 
         if len(empty) != 0:
-            raise Exception("trailing junk after DER privkey curve_oid: %s" % BinaryAscii.hexFromBinary(empty))
+            raise Exception("trailing junk after DER private key curve_oid: %s" % BinaryAscii.hexFromBinary(empty))
 
         curve = curvesByOid.get(oidCurve)
         if not curve:
@@ -64,10 +65,10 @@ class PrivateKey:
                 oidCurve, ", ".join([curve.name for curve in supportedCurves]))
             )
 
-        if len(privkeyStr) < curve.length():
-            privkeyStr = "\x00" * (curve.lenght() - len(privkeyStr)) + privkeyStr
+        if len(privateKeyStr) < curve.length():
+            privateKeyStr = "\x00" * (curve.lenght() - len(privateKeyStr)) + privateKeyStr
 
-        return cls.fromString(privkeyStr, curve)
+        return cls.fromString(privateKeyStr, curve)
 
     @classmethod
     def fromString(cls, string, curve=secp256k1):

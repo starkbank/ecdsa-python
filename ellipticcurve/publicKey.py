@@ -12,13 +12,14 @@ class PublicKey:
         self.curve = curve
 
     def toString(self, encoded=False):
-        Xstr = BinaryAscii.stringFromNumber(number=self.point.x, length=self.curve.length())
-        Ystr = BinaryAscii.stringFromNumber(number=self.point.y, length=self.curve.length())
-        return Xstr + Ystr if not encoded else "\x00\x04" + Xstr + Ystr
+        xString = BinaryAscii.stringFromNumber(number=self.point.x, length=self.curve.length())
+        yString = BinaryAscii.stringFromNumber(number=self.point.y, length=self.curve.length())
+        return xString + yString if not encoded else "\x00\x04" + xString + yString
 
     def toDer(self):
         oidEcPublicKey = (1, 2, 840, 10045, 2, 1)
         encodeEcAndOid = encodeSequence(encodeOid(*oidEcPublicKey), encodeOid(*self.curve.oid))
+
         return encodeSequence(encodeEcAndOid, encodeBitstring(self.toString(encoded=True)))
 
     def toPem(self):
@@ -32,32 +33,37 @@ class PublicKey:
     def fromDer(cls, string):
         s1, empty = removeSequence(string)
         if len(empty) != 0:
-            raise Exception("trailing junk after DER pubkey: {}".format(BinaryAscii.hexFromBinary(empty)))
-        s2, pointStrBitstring = removeSequence(s1)
+            raise Exception("trailing junk after DER public key: {}".format(BinaryAscii.hexFromBinary(empty)))
 
+        s2, pointStrBitstring = removeSequence(s1)
 
         oidPk, rest = removeObject(s2)
         
         oidCurve, empty = removeObject(rest)
         if len(empty) != 0:
-            raise Exception("trailing junk after DER pubkey objects: {}".format(BinaryAscii.hexFromBinary(empty)))
+            raise Exception("trailing junk after DER public key objects: {}".format(BinaryAscii.hexFromBinary(empty)))
 
         curve = curvesByOid.get(oidCurve)
         if not curve:
-            raise Exception("Unknown curve with oid %s. I only know about these: %s" % (
-            oidCurve, ", ".join([curve.name for curve in supportedCurves])))
+            raise Exception(
+                "Unknown curve with oid %s. Only the following are available: %s" % (
+                    oidCurve,
+                    ", ".join([curve.name for curve in supportedCurves])
+                )
+            )
+
         pointStr, empty = removeBitString(pointStrBitstring)
         if len(empty) != 0:
-            raise Exception("trailing junk after pubkey pointstring: {}".format(BinaryAscii.hexFromBinary(empty)))
+            raise Exception("trailing junk after public key point-string: {}".format(BinaryAscii.hexFromBinary(empty)))
 
         return cls.fromString(pointStr[2:], curve)
 
     @classmethod
     def fromString(cls, string, curve=secp256k1, validatePoint=True):
-        baselen = curve.length()
+        baseLen = curve.length()
 
-        xs = string[:baselen]
-        ys = string[baselen:]
+        xs = string[:baseLen]
+        ys = string[baseLen:]
 
         p = Point(x=BinaryAscii.numberFromString(xs), y=BinaryAscii.numberFromString(ys))
 
