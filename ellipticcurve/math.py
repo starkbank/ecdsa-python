@@ -15,7 +15,7 @@ class Math:
         :param A: Coefficient of the first-order term of the equation Y^2 = X^3 + A*X + B (mod p)
         :return: Point that represents the sum of First and Second Point
         """
-        return cls.fromJacobian(cls.jacobianMultiply(cls.toJacobian(p), n, N, A, P), P)
+        return cls._fromJacobian(cls._jacobianMultiply(cls._toJacobian(p), n, N, A, P), P)
 
     @classmethod
     def add(cls, p, q, A, P):
@@ -28,7 +28,7 @@ class Math:
         :param A: Coefficient of the first-order term of the equation Y^2 = X^3 + A*X + B (mod p)
         :return: Point that represents the sum of First and Second Point
         """
-        return cls.fromJacobian(cls.jacobianAdd(cls.toJacobian(p), cls.toJacobian(q), A, P), P)
+        return cls._fromJacobian(cls._jacobianAdd(cls._toJacobian(p), cls._toJacobian(q), A, P), P)
 
     @classmethod
     def inv(cls, x, n):
@@ -50,7 +50,7 @@ class Math:
         return lm % n
 
     @classmethod
-    def toJacobian(cls, p):
+    def _toJacobian(cls, p):
         """
         Convert point to Jacobian coordinates
 
@@ -60,7 +60,7 @@ class Math:
         return Point(p.x, p.y, 1)
 
     @classmethod
-    def fromJacobian(cls, p, P):
+    def _fromJacobian(cls, p, P):
         """
         Convert point back from Jacobian coordinates
 
@@ -72,7 +72,7 @@ class Math:
         return Point((p.x * z ** 2) % P, (p.y * z ** 3) % P)
 
     @classmethod
-    def jacobianDouble(cls, p, A, P):
+    def _jacobianDouble(cls, p, A, P):
         """
         Double a point in elliptic curves
 
@@ -92,7 +92,7 @@ class Math:
         return Point(nx, ny, nz)
 
     @classmethod
-    def jacobianAdd(cls, p, q, A, P):
+    def _jacobianAdd(cls, p, q, A, P):
         """
         Add two points in elliptic curves
 
@@ -116,7 +116,7 @@ class Math:
         if U1 == U2:
             if S1 != S2:
                 return Point(0, 0, 1)
-            return cls.jacobianDouble(p, A, P)
+            return cls._jacobianDouble(p, A, P)
 
         H = U2 - U1
         R = S2 - S1
@@ -130,7 +130,7 @@ class Math:
         return Point(nx, ny, nz)
 
     @classmethod
-    def jacobianMultiply(cls, p, n, N, A, P):
+    def _jacobianMultiply(cls, p, n, N, A, P):
         """
         Multily point and scalar in elliptic curves
 
@@ -146,8 +146,8 @@ class Math:
         if n == 1:
             return p
         if n < 0 or n >= N:
-            return cls.jacobianMultiply(p, n % N, N, A, P)
+            return cls._jacobianMultiply(p, n % N, N, A, P)
         if (n % 2) == 0:
-            return cls.jacobianDouble(cls.jacobianMultiply(p, n // 2, N, A, P), A, P)
+            return cls._jacobianDouble(cls._jacobianMultiply(p, n // 2, N, A, P), A, P)
         if (n % 2) == 1:
-            return cls.jacobianAdd(cls.jacobianDouble(cls.jacobianMultiply(p, n // 2, N, A, P), A, P), p, A, P)
+            return cls._jacobianAdd(cls._jacobianDouble(cls._jacobianMultiply(p, n // 2, N, A, P), A, P), p, A, P)
