@@ -6,6 +6,8 @@ from .publicKey import PublicKey
 from .curve import secp256k1, curvesByOid, supportedCurves
 from .math import Math
 
+hexAt = "\x00"
+
 
 class PrivateKey:
 
@@ -61,12 +63,15 @@ class PrivateKey:
 
         curve = curvesByOid.get(oidCurve)
         if not curve:
-            raise Exception("Unknown curve with oid %s. I only know about these: %s" % (
-                oidCurve, ", ".join([curve.name for curve in supportedCurves]))
+            raise Exception(
+                "unknown curve with oid %s; The following are registered: %s" % (
+                    oidCurve,
+                    ", ".join([curve.name for curve in supportedCurves])
+                )
             )
 
         if len(privateKeyStr) < curve.length():
-            privateKeyStr = "\x00" * (curve.lenght() - len(privateKeyStr)) + privateKeyStr
+            privateKeyStr = hexAt * (curve.lenght() - len(privateKeyStr)) + privateKeyStr
 
         return cls.fromString(privateKeyStr, curve)
 

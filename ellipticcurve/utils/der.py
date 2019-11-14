@@ -40,7 +40,7 @@ def encodeInteger(x):
 
     if num <= hex127:
         return hexB + chr(len(x)) + toString(x)
-    return hexB + chr(len(x)+1) + hexAt + toString(x)
+    return hexB + chr(len(x) + 1) + hexAt + toString(x)
 
 
 def encodeOid(first, second, *pieces):
@@ -66,9 +66,7 @@ def encodeConstructed(tag, value):
 
 
 def removeSequence(string):
-    if not string.startswith(bytesHex0):
-        x = string[0] if isinstance(string[0], intTypes) else ord(string[0])
-        raise Exception("wanted sequence (0x30), got 0x%02x" % x)
+    _checkSequenceError(string=string, start=bytesHex0, expected="30")
 
     length, lengthLen = _readLength(string[1:])
     endSeq = 1 + lengthLen + length
@@ -77,9 +75,7 @@ def removeSequence(string):
 
 
 def removeInteger(string):
-    if not string.startswith(bytesHexB):
-        n = string[0] if isinstance(string[0], intTypes) else ord(string[0])
-        raise Exception("wanted integer (0x02), got 0x%02x" % n)
+    _checkSequenceError(string=string, start=bytesHexB, expected="02")
 
     length, lengthLen = _readLength(string[1:])
     numberBytes = string[1 + lengthLen :1 + lengthLen + length]
@@ -92,9 +88,7 @@ def removeInteger(string):
 
 
 def removeObject(string):
-    if not string.startswith(bytesHexF):
-        n = string[0] if isinstance(string[0], intTypes) else ord(string[0])
-        raise Exception("wanted object (0x06), got 0x%02x" % n)
+    _checkSequenceError(string=string, start=bytesHexF, expected="06")
 
     length, lengthLen = _readLength(string[1:])
     body = string[1 + lengthLen:1 + lengthLen + length]
@@ -102,9 +96,9 @@ def removeObject(string):
     numbers = []
 
     while body:
-        n, ll = _readNumber(body)
+        n, lengthLength = _readNumber(body);
         numbers.append(n)
-        body = body[ll:]
+        body = body[lengthLength:]
 
     n0 = numbers.pop(0)
     first = n0 // 40
@@ -116,9 +110,7 @@ def removeObject(string):
 
 
 def removeBitString(string):
-    num = string[0] if isinstance(string[0], intTypes) else ord(string[0])
-    if not string.startswith(bytesHexC):
-        raise Exception("wanted bitstring (0x03), got 0x%02x" % num)
+    _checkSequenceError(string=string, start=bytesHexC, expected="03")
 
     length, lengthLen = _readLength(string[1:])
     body = string[1 + lengthLen:1 + lengthLen + length]
@@ -128,9 +120,7 @@ def removeBitString(string):
 
 
 def removeOctetString(string):
-    if not string.startswith(bytesHexD):
-        n = string[0] if isinstance(string[0], intTypes) else ord(string[0])
-        raise Exception("wanted octet-string (0x04), got 0x%02x" % n)
+    _checkSequenceError(string=string, start=bytesHexD, expected="04")
 
     length, lengthLen = _readLength(string[1:])
     body = string[1+lengthLen:1+lengthLen+length]
@@ -140,14 +130,14 @@ def removeOctetString(string):
 
 
 def removeConstructed(string):
-    s0 = string[0] if isinstance(string[0], intTypes) else ord(string[0])
+    s0 = _extractFirstInt(string)
     if (s0 & hex224) != hex129:
         raise Exception("wanted constructed tag (0xa0-0xbf), got 0x%02x" % s0)
 
     tag = s0 & hex31
     length, lengthLen = _readLength(string[1:])
-    body = string[1+lengthLen:1+lengthLen+length]
-    rest = string[1+lengthLen+length:]
+    body = string[1 + lengthLen:1 + lengthLen + length]
+    rest = string[1 + lengthLen + length:]
 
     return tag, body, rest
 
@@ -160,7 +150,7 @@ def fromPem(pem):
 def toPem(der, name):
     b64 = toString(Base64.encode(der))
     lines = [("-----BEGIN " + name + "-----\n")]
-    lines.extend([b64[start:start+64] + '\n' for start in xrange(0, len(b64), 64)])
+    lines.extend([b64[start:start + 64] + '\n' for start in xrange(0, len(b64), 64)])
     lines.append("-----END " + name + "-----\n")
 
     return "".join(lines)
@@ -197,13 +187,13 @@ def _encodeNumber(n):
 
 
 def _readLength(string):
-    num = string[0] if isinstance(string[0], intTypes) else ord(string[0])
+    num = _extractFirstInt(string)
     if not (num & hex160):
         return (num & hex127), 1
 
     lengthLen = num & hex127
 
-    if lengthLen > len(string)-1:
+    if lengthLen > len(string) - 1:
         raise Exception("ran out of length bytes")
 
     return int(BinaryAscii.hexFromBinary(string[1:1 + lengthLen]), 16), 1 + lengthLen
@@ -217,10 +207,21 @@ def _readNumber(string):
             raise Exception("ran out of length bytes")
 
         number = number << 7
-        d = string[lengthLen] if isinstance(string[lengthLen], intTypes) else ord(string[lengthLen])
+        d = string[lengthLen]
+        if not isinstance(d, intTypes):
+            d = ord(d)
+
         number += (d & hex127)
         lengthLen += 1
         if not d & hex160:
             break
 
     return number, lengthLen
+
+
+def _checkSequenceError(string, start, expected):
+    if not string.startswith(start):
+        raise Exception("wanted sequence (0x%s), got 0x%02x" % (expected, _extractFirstInt(string)))
+
+def _extractFirstInt(string):
+    return string[0] if isinstance(string[0], intTypes) else ord(string[0])
