@@ -18,7 +18,7 @@ setup(
     author="Stark Bank",
     author_email="developers@starkbank.com",
     keywords=["ecdsa", "elliptic curve", "elliptic", "curve", "stark bank", "starkbank", "cryptograph"],
-    version="0.1.7"
+    version="0.1.8"
 )
 
 
