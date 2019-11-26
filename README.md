@@ -9,6 +9,14 @@ We tried other Python libraries such as [python-ecdsa], [fast-ecdsa] and others 
 
 For this reason, we decided to create something simple, compatible with OpenSSL and fast using some elegant math as Jacobian Coordinates to speed up the ECDSA. Starkbank-EDCSA is fully compatible with Python2 and Python3.
 
+### Installation
+
+To install StarkBank`s ECDSA-Python, run:
+
+```sh
+pip install starkbank-ecdsa
+```
+
 ### Curves
 
 We currently support `secp256k1`, but it's super easy to add more curves to the project. Just add them on `curve.py`
@@ -151,12 +159,6 @@ print(signature.toBase64())
 ```
 
 [Stark Bank]: https://starkbank.com
-
-### How to install
-
-```
-pip install starkbank-ecdsa
-```
 
 ### Run all unit tests
 
