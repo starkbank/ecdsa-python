@@ -4,9 +4,6 @@
 
 We tried other Python libraries such as [python-ecdsa], [fast-ecdsa] and others less famous ones, but we didn't find anything that suit our needs. The fist one was pure Python, but it was too slow. The second one mixed Python and C and it was really fast, but we were unable to use it in our current infrastructure that required pure Python code.
 
-[python-ecdsa]: https://github.com/warner/python-ecdsa
-[fast-ecdsa]: https://github.com/AntonKueltz/fastecdsa
-
 For this reason, we decided to create something simple, compatible with OpenSSL and fast using some elegant math as Jacobian Coordinates to speed up the ECDSA. Starkbank-EDCSA is fully compatible with Python2 and Python3.
 
 ### Installation
@@ -35,7 +32,7 @@ So our pure Python code cannot compete with C based libraries, but it's `6x fast
 
 ### Sample Code
 
-How sign a json message for [Stark Bank]:
+How to sign a json message for [Stark Bank]:
 
 ```python
 from json import dumps
@@ -78,6 +75,7 @@ print(signature.toBase64())
 publicKey = privateKey.publicKey()
 
 print(Ecdsa.verify(message, signature, publicKey))
+
 ```
 
 Simple use:
@@ -97,6 +95,7 @@ signature = Ecdsa.sign(message, privateKey)
 
 # Verify if signature is valid
 print(Ecdsa.verify(message, signature, publicKey))
+
 ```
 
 ### OpenSSL
@@ -126,12 +125,11 @@ publicKeyPem = File.read("publicKey.pem")
 signatureDer = File.read("signatureDer.txt", "rb")
 message = File.read("message.txt")
 
-publicKeyPem = File.read("publicKey.pem")
-
 publicKey = PublicKey.fromPem(publicKeyPem)
 signature = Signature.fromDer(signatureDer)
 
 print(Ecdsa.verify(message, signature, publicKey))
+
 ```
 
 You can also verify it on terminal:
@@ -158,11 +156,14 @@ signature = Signature.fromDer(signatureDer)
 print(signature.toBase64())
 ```
 
-[Stark Bank]: https://starkbank.com
-
 ### Run all unit tests
 
 ```
 python3 -m unittest discover
 python2 -m unittest discover
 ```
+
+
+[python-ecdsa]: https://github.com/warner/python-ecdsa
+[fast-ecdsa]: https://github.com/AntonKueltz/fastecdsa
+[Stark Bank]: https://starkbank.com
