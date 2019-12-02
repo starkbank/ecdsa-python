@@ -1,7 +1,7 @@
 from .utils.integer import RandomInteger
 from .utils.compatibility import *
 from .utils.binary import BinaryAscii
-from .utils.der import fromPem, removeSequence, removeInteger, removeObject, removeOctetString, removeConstructed, toPem, encodeSequence, encodeInteger, encodeBitstring, encodeOid, encodeOctetString, encodeConstructed
+from .utils.der import fromPem, removeSequence, removeInteger, removeObject, removeOctetString, removeConstructed, toPem, encodeSequence, encodeInteger, encodeBitString, encodeOid, encodeOctetString, encodeConstructed
 from .publicKey import PublicKey
 from .curve import secp256k1, curvesByOid, supportedCurves
 from .math import Math
@@ -17,7 +17,13 @@ class PrivateKey:
 
     def publicKey(self):
         curve = self.curve
-        publicPoint = Math.multiply(curve.G, n=self.secret, A=curve.A, P=curve.P, N=curve.N)
+        publicPoint = Math.multiply(
+            p=curve.G,
+            n=self.secret,
+            N=curve.N,
+            A=curve.A,
+            P=curve.P,
+        )
         return PublicKey(point=publicPoint, curve=curve)
 
     def toString(self):
@@ -30,7 +36,7 @@ class PrivateKey:
             encodeInteger(1),
             encodeOctetString(self.toString()),
             encodeConstructed(0, encodeOid(*self.curve.oid)),
-            encodeConstructed(1, encodeBitstring(encodedPublicKey)),
+            encodeConstructed(1, encodeBitString(encodedPublicKey)),
         )
 
     def toPem(self):
@@ -45,11 +51,16 @@ class PrivateKey:
     def fromDer(cls, string):
         t, empty = removeSequence(string)
         if len(empty) != 0:
-            raise Exception("trailing junk after DER private key: %s" % BinaryAscii.hexFromBinary(empty))
+            raise Exception(
+                "trailing junk after DER private key: " +
+                BinaryAscii.hexFromBinary(empty)
+            )
 
         one, t = removeInteger(t)
         if one != 1:
-            raise Exception("expected '1' at start of DER private key, got %d" % one)
+            raise Exception(
+                "expected '1' at start of DER private key, got %d" % one
+            )
 
         privateKeyStr, t = removeOctetString(t)
         tag, curveOidStr, t = removeConstructed(t)
@@ -59,16 +70,20 @@ class PrivateKey:
         oidCurve, empty = removeObject(curveOidStr)
 
         if len(empty) != 0:
-            raise Exception("trailing junk after DER private key curve_oid: %s" % BinaryAscii.hexFromBinary(empty))
+            raise Exception(
+                "trailing junk after DER private key curve_oid: %s" %
+                BinaryAscii.hexFromBinary(empty)
+            )
 
-        curve = curvesByOid.get(oidCurve)
-        if not curve:
+        if oidCurve not in curvesByOid:
             raise Exception(
                 "unknown curve with oid %s; The following are registered: %s" % (
                     oidCurve,
                     ", ".join([curve.name for curve in supportedCurves])
                 )
             )
+
+        curve = curvesByOid[oidCurve]
 
         if len(privateKeyStr) < curve.length():
             privateKeyStr = hexAt * (curve.lenght() - len(privateKeyStr)) + privateKeyStr

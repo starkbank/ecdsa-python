@@ -15,7 +15,16 @@ class Math:
         :param A: Coefficient of the first-order term of the equation Y^2 = X^3 + A*X + B (mod p)
         :return: Point that represents the sum of First and Second Point
         """
-        return cls._fromJacobian(cls._jacobianMultiply(cls._toJacobian(p), n, N, A, P), P)
+        return cls._fromJacobian(
+            cls._jacobianMultiply(
+                cls._toJacobian(p),
+                n,
+                N,
+                A,
+                P,
+            ),
+            P,
+        )
 
     @classmethod
     def add(cls, p, q, A, P):
@@ -28,7 +37,15 @@ class Math:
         :param A: Coefficient of the first-order term of the equation Y^2 = X^3 + A*X + B (mod p)
         :return: Point that represents the sum of First and Second Point
         """
-        return cls._fromJacobian(cls._jacobianAdd(cls._toJacobian(p), cls._toJacobian(q), A, P), P)
+        return cls._fromJacobian(
+            cls._jacobianAdd(
+                cls._toJacobian(p),
+                cls._toJacobian(q),
+                A,
+                P,
+            ),
+            P,
+        )
 
     @classmethod
     def inv(cls, x, n):
@@ -41,12 +58,14 @@ class Math:
         """
         if x == 0:
             return 0
+
         lm, hm = 1, 0
         low, high = x % n, n
         while low > 1:
-            r = high//low
-            nm, new = hm-lm*r, high-low*r
+            r = high // low
+            nm, new = hm - lm * r, high - low * r
             lm, low, hm, high = nm, new, lm, low
+
         return lm % n
 
     @classmethod
@@ -69,7 +88,11 @@ class Math:
         :return: Point in default coordinates
         """
         z = cls.inv(p.z, P)
-        return Point((p.x * z ** 2) % P, (p.y * z ** 3) % P)
+
+        return Point(
+            (p.x * z ** 2) % P,
+            (p.y * z ** 3) % P,
+        )
 
     @classmethod
     def _jacobianDouble(cls, p, A, P):
@@ -83,6 +106,7 @@ class Math:
         """
         if not p.y:
             return Point(0, 0, 0)
+
         ysq = (p.y ** 2) % P
         S = (4 * p.x * ysq) % P
         M = (3 * p.x ** 2 + A * p.z ** 4) % P
@@ -143,13 +167,40 @@ class Math:
         """
         if p.y == 0 or n == 0:
             return Point(0, 0, 1)
+
         if n == 1:
             return p
+
         if n < 0 or n >= N:
             return cls._jacobianMultiply(p, n % N, N, A, P)
-        if (n % 2) == 0:
-            return cls._jacobianDouble(cls._jacobianMultiply(p, n // 2, N, A, P), A, P)
-        if (n % 2) == 1:
-            return cls._jacobianAdd(cls._jacobianDouble(cls._jacobianMultiply(p, n // 2, N, A, P), A, P), p, A, P)
 
-        raise Exception("logical failure")
+        if (n % 2) == 0:
+            return cls._jacobianDouble(
+                cls._jacobianMultiply(
+                    p,
+                    n // 2,
+                    N,
+                    A,
+                    P
+                ),
+                A,
+                P,
+            )
+
+        # (n % 2) == 1:
+        return cls._jacobianAdd(
+            cls._jacobianDouble(
+                cls._jacobianMultiply(
+                    p,
+                    n // 2,
+                    N,
+                    A,
+                    P,
+                ),
+                A,
+                P,
+            ),
+            p,
+            A,
+            P,
+        )
