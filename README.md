@@ -2,9 +2,9 @@
 
 ### Overview
 
-We tried other Python libraries such as [python-ecdsa], [fast-ecdsa] and others less famous ones, but we didn't find anything that suit our needs. The fist one was pure Python, but it was too slow. The second one mixed Python and C and it was really fast, but we were unable to use it in our current infrastructure that required pure Python code.
+We tried other Python libraries such as [python-ecdsa], [fast-ecdsa] and others less famous ones, but we didn't find anything that suited our needs. The first one was pure Python, but it was too slow. The second one mixed Python and C and it was really fast, but we were unable to use it in our current infrastructure, which required pure Python code.
 
-For this reason, we decided to create something simple, compatible with OpenSSL and fast using some elegant math as Jacobian Coordinates to speed up the ECDSA. Starkbank-EDCSA is fully compatible with Python2 and Python3.
+For this reason, we decided to create something simple, compatible with OpenSSL and fast using elegant math such as Jacobian Coordinates to speed up the ECDSA. Starkbank-EDCSA is fully compatible with Python2 and Python3.
 
 ### Installation
 
@@ -68,10 +68,10 @@ message = dumps({
 
 signature = Ecdsa.sign(message, privateKey)
 
-# Generate Signature in base64. This result can be sent to Stark Bank in header as Digital-Signature parameter
+# Generate Signature in base64. This result can be sent to Stark Bank in the request header as the Digital-Signature parameter.
 print(signature.toBase64())
 
-# To double check if message matches the signature
+# To double check if the message matches the signature, do this:
 publicKey = privateKey.publicKey()
 
 print(Ecdsa.verify(message, signature, publicKey))
@@ -93,7 +93,7 @@ message = "My test message"
 # Generate Signature
 signature = Ecdsa.sign(message, privateKey)
 
-# Verify if signature is valid
+# To verify if the signature is valid
 print(Ecdsa.verify(message, signature, publicKey))
 
 ```
