@@ -3,13 +3,14 @@ from .signature import Signature
 from .math import Math
 from .utils.binary import BinaryAscii
 from .utils.integer import RandomInteger
+from .utils.compatibility import toBytes
 
 
 class Ecdsa:
 
     @classmethod
     def sign(cls, message, privateKey, hashfunc=sha256):
-        hashMessage = hashfunc(message.encode()).digest()
+        hashMessage = hashfunc(toBytes(message)).digest()
         numberMessage = BinaryAscii.numberFromString(hashMessage)
         curve = privateKey.curve
         randNum = RandomInteger.between(1, curve.N - 1)
