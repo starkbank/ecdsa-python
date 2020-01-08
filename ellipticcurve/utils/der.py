@@ -146,7 +146,7 @@ def removeConstructed(string):
 
 def fromPem(pem):
     t = "".join([
-        l.strip() for l in pem.split("\n")
+        l.strip() for l in pem.splitlines()
         if l and not l.startswith("-----")
     ])
     return Base64.decode(t)
