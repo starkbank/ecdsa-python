@@ -4,6 +4,7 @@ from .signature import Signature
 from .math import Math
 from .utils.binary import BinaryAscii
 from .utils.integer import RandomInteger
+from .utils.compatibility import toBytes
 
 
 class Ecdsa:

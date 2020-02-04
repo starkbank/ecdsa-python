@@ -6,7 +6,7 @@ if pyVersion.major == 3:
     # py3 constants and conversion functions
 
     xrange = range
-    stringTypes = (str)
+    stringTypes = (str,)
     intTypes = (int, float)
 
     def toString(string):
@@ -22,6 +22,7 @@ if pyVersion.major == 3:
         return hexlify(byteString)
 else:
     # py2 constants and conversion functions
+
     stringTypes = (str, unicode)
     intTypes = (int, float, long)
 

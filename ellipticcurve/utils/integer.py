@@ -12,4 +12,5 @@ class RandomInteger:
         :param max: maximum value of the integer
         :return:
         """
+
         return SystemRandom().randrange(min, max + 1)
