@@ -5,6 +5,8 @@
 # folder used by virtualenv
 env
 .env
+venv
+.venv
 
 # ignore info from all dependencies
 *.dist-info
