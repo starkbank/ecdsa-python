@@ -20,11 +20,13 @@ class Signature:
     def fromDer(cls, string):
         rs, empty = removeSequence(string)
         if len(empty) != 0:
-            raise Exception("trailing junk after DER sig: %s" % BinaryAscii.hexFromBinary(empty))
+            raise Exception("trailing junk after DER signature: %s" % BinaryAscii.hexFromBinary(empty))
+
         r, rest = removeInteger(rs)
         s, empty = removeInteger(rest)
         if len(empty) != 0:
             raise Exception("trailing junk after DER numbers: %s" % BinaryAscii.hexFromBinary(empty))
+
         return Signature(r, s)
 
     @classmethod
