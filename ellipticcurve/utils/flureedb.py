@@ -44,25 +44,27 @@ class DbSigner:
         obj["expire"] = int(time.time() + self.validity)
         rval = self.obj_signature((obj))
         return rval
-    def sign_query(self, obj):
-        datastring = json.dumps(obj)
-        sig =  ecdsa.Ecdsa.sign(datastring, self.private_key, with_recid=True)
-        derstring = sig.toDer()
-        toHex = lambda x:"".join([hex(ord(c))[2:].zfill(2) for c in x])
-        hexder = toHex(derstring)
+    def sign_query(self, param, querytype="query"):
+        body = json.dumps(param) 
+        uri = "/fdb/" + self.db + "/" + querytype;
         now = datetime.now()
         stamp = mktime(now.timetuple())
         mydate = formatdate(timeval=stamp, localtime=False, usegmt=True)
         h = hashlib.sha256()
-        h.update(datastring.encode())
+        h.update(body.encode())
         digest = h.digest()
         b64digest = base64.b64encode(digest).decode()
+        signingstring = "(request-target): post " + uri + "\nx-fluree-date: " + mydate + "\ndigest: SHA-256=" + b64digest;
+        sig =  ecdsa.Ecdsa.sign(signingstring, self.private_key, with_recid=True)
+        derstring = sig.toDer()
+        toHex = lambda x:"".join([hex(ord(c))[2:].zfill(2) for c in x])
+        hexder = toHex(derstring)
         headers = dict()
         headers["content-type"] = "application/json"
         headers["mydate"] = mydate
         headers["signature"] = 'keyId="na",headers="(request-target) host mydate digest",algorithm="ecdsa-sha256",signature="' + hexder + '"'
         headers["digest"] = "SHA256=" + b64digest
-        return datastring, headers
+        return body, headers
 
 
 
