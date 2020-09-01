@@ -3,6 +3,11 @@ import json
 import random
 import time
 import base58
+import base64
+import hashlib
+from email.utils import formatdate
+from datetime import datetime
+from time import mktime
 from ellipticcurve import privateKey, ecdsa
 
 class DbSigner:
@@ -30,7 +35,7 @@ class DbSigner:
     def sign_transaction(self, transaction):
         obj = dict()
         obj["type"] = "tx"
-        obj["tx"] = []
+        obj["tx"] = transaction
         obj["db"] = self.db
         obj["auth"] = self.auth_id
         obj["fuel"] = self.fuel
@@ -39,3 +44,25 @@ class DbSigner:
         obj["expire"] = int(time.time() + self.validity)
         rval = self.obj_signature((obj))
         return rval
+    def sign_query(self, obj):
+        datastring = json.dumps(obj)
+        sig =  ecdsa.Ecdsa.sign(datastring, self.private_key, with_recid=True)
+        derstring = sig.toDer()
+        toHex = lambda x:"".join([hex(ord(c))[2:].zfill(2) for c in x])
+        hexder = toHex(derstring)
+        now = datetime.now()
+        stamp = mktime(now.timetuple())
+        mydate = formatdate(timeval=stamp, localtime=False, usegmt=True)
+        h = hashlib.sha256()
+        h.update(datastring.encode())
+        digest = h.digest()
+        b64digest = base64.b64encode(digest).decode()
+        headers = dict()
+        headers["content-type"] = "application/json"
+        headers["mydate"] = mydate
+        headers["signature"] = 'keyId="na",headers="(request-target) host mydate digest",algorithm="ecdsa-sha256",signature="' + hexder + '"'
+        headers["digest"] = "SHA256=" + b64digest
+        return datastring, headers
+
+
+

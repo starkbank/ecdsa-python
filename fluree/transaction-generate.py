@@ -3,7 +3,7 @@ import json
 from ellipticcurve.utils.flureedb import DbSigner
 
 def free_test(signer):
-    data = '[{"foo": 42, "bar": "appelvlaai"}]'
+    data = [{"foo": 42, "bar": "appelvlaai"}]
     command = signer.sign_transaction(data)
     command = json.dumps(command, indent=4, sort_keys=True)
     print(command);
