@@ -10,15 +10,22 @@ from .utils.compatibility import toBytes
 class Ecdsa:
 
     @classmethod
-    def sign(cls, message, privateKey, hashfunc=sha256):
+    def sign(cls, message, privateKey, hashfunc=sha256, with_recid=False):
         hashMessage = hashfunc(toBytes(message)).digest()
         numberMessage = BinaryAscii.numberFromString(hashMessage)
         curve = privateKey.curve
-        randNum = RandomInteger.between(1, curve.N - 1)
-        randSignPoint = Math.multiply(curve.G, n=randNum, A=curve.A, P=curve.P, N=curve.N)
-        r = randSignPoint.x % curve.N
-        s = ((numberMessage + r * privateKey.secret) * (Math.inv(randNum, curve.N))) % curve.N
-        return Signature(r, s)
+        while True:
+            randNum = RandomInteger.between(1, curve.N - 1)
+            randSignPoint = Math.multiply(curve.G, n=randNum, A=curve.A, P=curve.P, N=curve.N)
+            r = randSignPoint.x % curve.N
+            s = ((numberMessage + r * privateKey.secret) * (Math.inv(randNum, curve.N))) % curve.N
+            if not with_recid:
+                return Signature(r, s)
+            if r !=0 and s != 0:
+                recid = randSignPoint.y & 1
+                if randSignPoint.y > curve.N:
+                    recid += 2
+                return Signature(r, s, recid)
 
     @classmethod
     def verify(cls, message, signature, publicKey, hashfunc=sha256):

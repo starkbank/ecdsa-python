@@ -6,12 +6,17 @@ from .utils.der import encodeSequence, encodeInteger, removeSequence, removeInte
 
 class Signature:
 
-    def __init__(self, r, s):
+    def __init__(self, r, s, recid=None):
         self.r = r
         self.s = s
+        self.recid = recid
 
     def toDer(self):
-        return encodeSequence(encodeInteger(self.r), encodeInteger(self.s))
+        rval = encodeSequence(encodeInteger(self.r), encodeInteger(self.s))
+        if self.recid is None:
+            return rval
+        first = chr(27 + self.recid)
+        return first + rval
 
     def toBase64(self):
         return toString(Base64.encode(toBytes(self.toDer())))
