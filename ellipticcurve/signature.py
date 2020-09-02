@@ -22,7 +22,11 @@ class Signature:
         return toString(Base64.encode(toBytes(self.toDer())))
 
     @classmethod
-    def fromDer(cls, string):
+    def fromDer(cls, string, has_recovery_byte=False):
+        recid = None
+        if has_recovery_byte:
+            recid = ord(string[0]) - 27
+            string = string[1:]
         rs, empty = removeSequence(string)
         if len(empty) != 0:
             raise Exception("trailing junk after DER signature: %s" % BinaryAscii.hexFromBinary(empty))
@@ -31,10 +35,11 @@ class Signature:
         s, empty = removeInteger(rest)
         if len(empty) != 0:
             raise Exception("trailing junk after DER numbers: %s" % BinaryAscii.hexFromBinary(empty))
-
-        return Signature(r, s)
+        if recid is None:
+            return Signature(r, s)
+        return Signature(r, s, recid)
 
     @classmethod
-    def fromBase64(cls, string):
+    def fromBase64(cls, string, has_recovery_byte=False):
         der = Base64.decode(string)
-        return cls.fromDer(der)
+        return cls.fromDer(der, has_recovery_byte)
