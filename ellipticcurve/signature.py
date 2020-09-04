@@ -6,25 +6,25 @@ from .utils.der import encodeSequence, encodeInteger, removeSequence, removeInte
 
 class Signature:
 
-    def __init__(self, r, s, recid=None):
+    def __init__(self, r, s, recoveryId=None):
         self.r = r
         self.s = s
-        self.recid = recid
+        self.recid = recoveryId
 
-    def toDer(self):
-        rval = encodeSequence(encodeInteger(self.r), encodeInteger(self.s))
-        if self.recid is None:
-            return rval
+    def toDer(self, withRecoveryId=False):
+        encodedSequence = encodeSequence(encodeInteger(self.r), encodeInteger(self.s))
+        if not withRecoveryId:
+            return encodedSequence
         first = chr(27 + self.recid)
-        return first + rval
+        return first + encodedSequence
 
-    def toBase64(self):
-        return toString(Base64.encode(toBytes(self.toDer())))
+    def toBase64(self, withRecoveryId=False):
+        return toString(Base64.encode(toBytes(self.toDer(withRecoveryId))))
 
     @classmethod
-    def fromDer(cls, string, has_recovery_byte=False):
+    def fromDer(cls, string, recoveryByte=False):
         recid = None
-        if has_recovery_byte:
+        if recoveryByte:
             recid = ord(string[0]) - 27
             string = string[1:]
         rs, empty = removeSequence(string)
@@ -40,6 +40,6 @@ class Signature:
         return Signature(r, s, recid)
 
     @classmethod
-    def fromBase64(cls, string, has_recovery_byte=False):
+    def fromBase64(cls, string, recoveryByte=False):
         der = Base64.decode(string)
-        return cls.fromDer(der, has_recovery_byte)
+        return cls.fromDer(der, recoveryByte)
