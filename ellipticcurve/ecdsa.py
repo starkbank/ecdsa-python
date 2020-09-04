@@ -1,10 +1,9 @@
 from hashlib import sha256
-from .utils.compatibility import toBytes
 from .signature import Signature
 from .math import Math
 from .utils.binary import BinaryAscii
 from .utils.integer import RandomInteger
-from .utils.compatibility import toBytes
+from .utils.compatibility import *
 
 
 class Ecdsa:
@@ -14,8 +13,9 @@ class Ecdsa:
         hashMessage = hashfunc(toBytes(message)).digest()
         numberMessage = BinaryAscii.numberFromString(hashMessage)
         curve = privateKey.curve
+
         r, s, randSignPoint = 0, 0, None
-        while  r == 0 or s == 0:
+        while r == 0 or s == 0:
             randNum = RandomInteger.between(1, curve.N - 1)
             randSignPoint = Math.multiply(curve.G, n=randNum, A=curve.A, P=curve.P, N=curve.N)
             r = randSignPoint.x % curve.N
@@ -23,6 +23,7 @@ class Ecdsa:
         recoveryId = randSignPoint.y & 1
         if randSignPoint.y > curve.N:
             recoveryId += 2
+
         return Signature(r=r, s=s, recoveryId=recoveryId)
 
     @classmethod
