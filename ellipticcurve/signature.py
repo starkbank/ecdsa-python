@@ -1,4 +1,5 @@
 from .utils.compatibility import *
+from .utils.compatibility import intTypes
 from .utils.base import Base64
 from .utils.binary import BinaryAscii
 from .utils.der import encodeSequence, encodeInteger, removeSequence, removeInteger
@@ -15,17 +16,17 @@ class Signature:
         encodedSequence = encodeSequence(encodeInteger(self.r), encodeInteger(self.s))
         if not withRecoveryId:
             return encodedSequence
-        first = chr(27 + self.recid)
-        return first + encodedSequence
+        return chr(27 + self.recid) + encodedSequence
 
     def toBase64(self, withRecoveryId=False):
         return toString(Base64.encode(toBytes(self.toDer(withRecoveryId))))
 
     @classmethod
     def fromDer(cls, string, recoveryByte=False):
-        recid = None
+        recoveryId = None
         if recoveryByte:
-            recid = ord(string[0]) - 27
+            recoveryId = string[0] if isinstance(string[0], intTypes) else ord(string[0])
+            recoveryId -= 27
             string = string[1:]
         rs, empty = removeSequence(string)
         if len(empty) != 0:
@@ -35,9 +36,7 @@ class Signature:
         s, empty = removeInteger(rest)
         if len(empty) != 0:
             raise Exception("trailing junk after DER numbers: %s" % BinaryAscii.hexFromBinary(empty))
-        if recid is None:
-            return Signature(r, s)
-        return Signature(r, s, recid)
+        return Signature(r, s, recoveryId)
 
     @classmethod
     def fromBase64(cls, string, recoveryByte=False):
