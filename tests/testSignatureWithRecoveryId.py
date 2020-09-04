@@ -20,7 +20,7 @@ class SignatureTest(TestCase):
 
         self.assertEqual(signature1.r, signature2.r)
         self.assertEqual(signature1.s, signature2.s)
-        self.assertEqual(signature1.recid, signature2.recid)
+        self.assertEqual(signature1.recoveryId, signature2.recoveryId)
 
     def testBase64Conversion(self):
         privateKey = PrivateKey()
@@ -34,4 +34,4 @@ class SignatureTest(TestCase):
 
         self.assertEqual(signature1.r, signature2.r)
         self.assertEqual(signature1.s, signature2.s)
-        self.assertEqual(signature1.recid, signature2.recid)
+        self.assertEqual(signature1.recoveryId, signature2.recoveryId)
