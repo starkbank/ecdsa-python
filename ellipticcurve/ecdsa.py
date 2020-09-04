@@ -14,11 +14,16 @@ class Ecdsa:
         hashMessage = hashfunc(toBytes(message)).digest()
         numberMessage = BinaryAscii.numberFromString(hashMessage)
         curve = privateKey.curve
-        randNum = RandomInteger.between(1, curve.N - 1)
-        randSignPoint = Math.multiply(curve.G, n=randNum, A=curve.A, P=curve.P, N=curve.N)
-        r = randSignPoint.x % curve.N
-        s = ((numberMessage + r * privateKey.secret) * (Math.inv(randNum, curve.N))) % curve.N
-        return Signature(r, s)
+        r, s, randSignPoint = 0, 0, None
+        while  r == 0 or s == 0:
+            randNum = RandomInteger.between(1, curve.N - 1)
+            randSignPoint = Math.multiply(curve.G, n=randNum, A=curve.A, P=curve.P, N=curve.N)
+            r = randSignPoint.x % curve.N
+            s = ((numberMessage + r * privateKey.secret) * (Math.inv(randNum, curve.N))) % curve.N
+        recoveryId = randSignPoint.y & 1
+        if randSignPoint.y > curve.N:
+            recoveryId += 2
+        return Signature(r=r, s=s, recoveryId=recoveryId)
 
     @classmethod
     def verify(cls, message, signature, publicKey, hashfunc=sha256):
