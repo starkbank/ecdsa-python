@@ -37,4 +37,5 @@ class Ecdsa:
         u1 = Math.multiply(curve.G, n=(numberMessage * inv) % curve.N, A=curve.A, P=curve.P, N=curve.N)
         u2 = Math.multiply(publicKey.point, n=(sigR * inv) % curve.N, A=curve.A, P=curve.P, N=curve.N)
         add = Math.add(u1, u2, P=curve.P, A=curve.A)
-        return sigR == add.x
+        modX = add.x % curve.N
+        return sigR == modX
