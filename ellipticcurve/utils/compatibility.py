@@ -5,35 +5,36 @@ from binascii import hexlify, unhexlify
 if pyVersion.major == 3:
     # py3 constants and conversion functions
 
-    xrange = range
     stringTypes = (str,)
     intTypes = (int, float)
 
-    def toString(string):
-        return string.decode("latin-1")
+    def toString(string, encoding="utf-8"):
+        return string.decode(encoding)
 
-    def toBytes(string):
-        return string.encode("latin-1")
+    def toBytes(string, encoding="utf-8"):
+        return string.encode(encoding)
 
-    def safeBinaryFromHex(hexString):
-        return unhexlify(hexString)
+    def safeBinaryFromHex(hexadecimal):
+        if len(hexadecimal) % 2 == 1:
+            hexadecimal = "0" + hexadecimal
+        return unhexlify(hexadecimal)
 
     def safeHexFromBinary(byteString):
-        return hexlify(byteString)
+        return toString(hexlify(byteString))
 else:
     # py2 constants and conversion functions
 
     stringTypes = (str, unicode)
     intTypes = (int, float, long)
 
-    def toString(string):
+    def toString(string, encoding="utf-8"):
         return string
 
-    def toBytes(string):
+    def toBytes(string, encoding="utf-8"):
         return string
 
-    def safeBinaryFromHex(hexString):
-        return unhexlify(hexString)
+    def safeBinaryFromHex(hexadecimal):
+        return unhexlify(hexadecimal)
 
     def safeHexFromBinary(byteString):
         return hexlify(byteString)

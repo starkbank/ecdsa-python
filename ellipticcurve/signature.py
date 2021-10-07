@@ -1,7 +1,6 @@
 from .utils.compatibility import *
-from .utils.base import Base64
-from .utils.binary import BinaryAscii
-from .utils.der import encodeSequence, encodeInteger, removeSequence, removeInteger
+from .utils.binary import hexFromByteString, byteStringFromHex, base64FromByteString, byteStringFromBase64
+from .utils.der import parse, encodeConstructed, encodePrimitive, DerFieldType
 
 
 class Signature:
@@ -12,13 +11,14 @@ class Signature:
         self.recoveryId = recoveryId
 
     def toDer(self, withRecoveryId=False):
-        encodedSequence = encodeSequence(encodeInteger(self.r), encodeInteger(self.s))
+        hexadecimal = self._toString()
+        encodedSequence = byteStringFromHex(hexadecimal)
         if not withRecoveryId:
             return encodedSequence
-        return chr(27 + self.recoveryId) + encodedSequence
+        return toBytes(chr(27 + self.recoveryId)) + encodedSequence
 
     def toBase64(self, withRecoveryId=False):
-        return toString(Base64.encode(toBytes(self.toDer(withRecoveryId=withRecoveryId))))
+        return base64FromByteString(self.toDer(withRecoveryId))
 
     @classmethod
     def fromDer(cls, string, recoveryByte=False):
@@ -28,18 +28,21 @@ class Signature:
             recoveryId -= 27
             string = string[1:]
 
-        rs, empty = removeSequence(string)
-        if len(empty) != 0:
-            raise Exception("trailing junk after DER signature: %s" % BinaryAscii.hexFromBinary(empty))
-
-        r, rest = removeInteger(rs)
-        s, empty = removeInteger(rest)
-        if len(empty) != 0:
-            raise Exception("trailing junk after DER numbers: %s" % BinaryAscii.hexFromBinary(empty))
-
-        return Signature(r=r, s=s, recoveryId=recoveryId)
+        hexadecimal = hexFromByteString(string)
+        return cls._fromString(string=hexadecimal, recoveryId=recoveryId)
 
     @classmethod
     def fromBase64(cls, string, recoveryByte=False):
-        der = Base64.decode(string)
+        der = byteStringFromBase64(string)
         return cls.fromDer(der, recoveryByte)
+
+    def _toString(self):
+        return encodeConstructed(
+            encodePrimitive(DerFieldType.integer, self.r),
+            encodePrimitive(DerFieldType.integer, self.s),
+        )
+
+    @classmethod
+    def _fromString(cls, string, recoveryId=None):
+        r, s = parse(string)[0]
+        return Signature(r=r, s=s, recoveryId=recoveryId)

@@ -1,8 +1,8 @@
 from hashlib import sha256
 from .signature import Signature
 from .math import Math
-from .utils.binary import BinaryAscii
 from .utils.integer import RandomInteger
+from .utils.binary import numberFromByteString
 from .utils.compatibility import *
 
 
@@ -10,8 +10,8 @@ class Ecdsa:
 
     @classmethod
     def sign(cls, message, privateKey, hashfunc=sha256):
-        hashMessage = hashfunc(toBytes(message)).digest()
-        numberMessage = BinaryAscii.numberFromString(hashMessage)
+        byteMessage = hashfunc(toBytes(message)).digest()
+        numberMessage = numberFromByteString(byteMessage)
         curve = privateKey.curve
 
         r, s, randSignPoint = 0, 0, None
@@ -28,14 +28,14 @@ class Ecdsa:
 
     @classmethod
     def verify(cls, message, signature, publicKey, hashfunc=sha256):
-        hashMessage = hashfunc(toBytes(message)).digest()
-        numberMessage = BinaryAscii.numberFromString(hashMessage)
+        byteMessage = hashfunc(toBytes(message)).digest()
+        numberMessage = numberFromByteString(byteMessage)
         curve = publicKey.curve
-        sigR = signature.r
-        sigS = signature.s
-        inv = Math.inv(sigS, curve.N)
-        u1 = Math.multiply(curve.G, n=(numberMessage * inv) % curve.N, A=curve.A, P=curve.P, N=curve.N)
-        u2 = Math.multiply(publicKey.point, n=(sigR * inv) % curve.N, A=curve.A, P=curve.P, N=curve.N)
-        add = Math.add(u1, u2, P=curve.P, A=curve.A)
+        r = signature.r
+        s = signature.s
+        inv = Math.inv(s, curve.N)
+        u1 = Math.multiply(curve.G, n=(numberMessage * inv) % curve.N, N=curve.N, A=curve.A, P=curve.P)
+        u2 = Math.multiply(publicKey.point, n=(r * inv) % curve.N, N=curve.N, A=curve.A, P=curve.P)
+        add = Math.add(u1, u2, A=curve.A, P=curve.P)
         modX = add.x % curve.N
-        return sigR == modX
+        return r == modX
