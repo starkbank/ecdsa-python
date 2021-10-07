@@ -1,6 +1,5 @@
 from unittest.case import TestCase
-from ellipticcurve.ecdsa import Ecdsa
-from ellipticcurve.privateKey import PrivateKey
+from ellipticcurve import Ecdsa, PrivateKey
 
 
 class EcdsaTest(TestCase):

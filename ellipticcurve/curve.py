@@ -17,7 +17,7 @@ class CurveFp:
         self.G = Point(Gx, Gy)
         self.name = name
         self.nistName = nistName
-        self.oid = oid
+        self.oid = oid  # ASN.1 Object Identifier
 
     def contains(self, p):
         """
@@ -40,7 +40,7 @@ secp256k1 = CurveFp(
     N=0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141,
     Gx=0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
     Gy=0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8,
-    oid=(1, 3, 132, 0, 10)
+    oid=[1, 3, 132, 0, 10]
 )
 
 prime256v1 = CurveFp(
@@ -52,8 +52,9 @@ prime256v1 = CurveFp(
     N=0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551,
     Gx=0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296,
     Gy=0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5,
-    oid=(1, 2, 840, 10045, 3, 1, 7),
+    oid=[1, 2, 840, 10045, 3, 1, 7],
 )
+
 p256 = prime256v1
 
 supportedCurves = [
@@ -61,4 +62,15 @@ supportedCurves = [
     prime256v1,
 ]
 
-curvesByOid = {curve.oid: curve for curve in supportedCurves}
+_curvesByOid = {tuple(curve.oid): curve for curve in supportedCurves}
+
+
+def getCurveByOid(oid):
+    if oid not in _curvesByOid:
+        raise Exception(
+            "Unknown curve with oid %s; The following are registered: %s" % (
+                ".".join(oid),
+                ", ".join([curve.name for curve in supportedCurves])
+            )
+        )
+    return _curvesByOid[oid]

@@ -1,239 +1,159 @@
-from .base import Base64
-from .binary import BinaryAscii
-from .compatibility import *
+from datetime import datetime
+from ellipticcurve.utils.oid import oidToHex, oidFromHex
+from ellipticcurve.utils.binary import hexFromInt, intFromHex, byteStringFromHex, bitsFromHex
 
 
-hexAt = "\x00"
-hexB = "\x02"
-hexC = "\x03"
-hexD = "\x04"
-hexF = "\x06"
-hex0 = "\x30"
+class DerFieldType:
 
-hex31 = 0x1f
-hex127 = 0x7f
-hex129 = 0xa0
-hex160 = 0x80
-hex224 = 0xe0
-
-bytesHex0 = toBytes(hex0)
-bytesHexB = toBytes(hexB)
-bytesHexC = toBytes(hexC)
-bytesHexD = toBytes(hexD)
-bytesHexF = toBytes(hexF)
-
-
-def encodeSequence(*encodedPieces):
-    totalLengthLen = sum([len(p) for p in encodedPieces])
-    return hex0 + _encodeLength(totalLengthLen) + "".join(encodedPieces)
-
-
-def encodeInteger(x):
-    assert x >= 0
-    t = ("%x" % x).encode()
-
-    if len(t) % 2:
-        t = toBytes("0") + t
-
-    x = BinaryAscii.binaryFromHex(t)
-    num = x[0] if isinstance(x[0], intTypes) else ord(x[0])
-
-    if num <= hex127:
-        return hexB + chr(len(x)) + toString(x)
-    return hexB + chr(len(x) + 1) + hexAt + toString(x)
-
-
-def encodeOid(first, second, *pieces):
-    assert first <= 2
-    assert second <= 39
-
-    encodedPieces = [chr(40 * first + second)] + [_encodeNumber(p) for p in pieces]
-    body = "".join(encodedPieces)
-
-    return hexF + _encodeLength(len(body)) + body
-
-
-def encodeBitString(t):
-    return hexC + _encodeLength(len(t)) + t
-
-
-def encodeOctetString(t):
-    return hexD + _encodeLength(len(t)) + t
-
-
-def encodeConstructed(tag, value):
-    return chr(hex129 + tag) + _encodeLength(len(value)) + value
-
-
-def removeSequence(string):
-    _checkSequenceError(string=string, start=bytesHex0, expected="30")
-
-    length, lengthLen = _readLength(string[1:])
-    endSeq = 1 + lengthLen + length
-
-    return string[1 + lengthLen: endSeq], string[endSeq:]
-
-
-def removeInteger(string):
-    _checkSequenceError(string=string, start=bytesHexB, expected="02")
-
-    length, lengthLen = _readLength(string[1:])
-    numberBytes = string[1 + lengthLen:1 + lengthLen + length]
-    rest = string[1 + lengthLen + length:]
-    nBytes = numberBytes[0] if isinstance(
-        numberBytes[0], intTypes
-    ) else ord(numberBytes[0])
-
-    assert nBytes < hex160
-
-    return int(BinaryAscii.hexFromBinary(numberBytes), 16), rest
-
-
-def removeObject(string):
-    _checkSequenceError(string=string, start=bytesHexF, expected="06")
-
-    length, lengthLen = _readLength(string[1:])
-    body = string[1 + lengthLen:1 + lengthLen + length]
-    rest = string[1 + lengthLen + length:]
-    numbers = []
-
-    while body:
-        n, lengthLength = _readNumber(body)
-        numbers.append(n)
-        body = body[lengthLength:]
-
-    n0 = numbers.pop(0)
-    first = n0 // 40
-    second = n0 - (40 * first)
-    numbers.insert(0, first)
-    numbers.insert(1, second)
-
-    return tuple(numbers), rest
-
-
-def removeBitString(string):
-    _checkSequenceError(string=string, start=bytesHexC, expected="03")
-
-    length, lengthLen = _readLength(string[1:])
-    body = string[1 + lengthLen:1 + lengthLen + length]
-    rest = string[1 + lengthLen + length:]
-
-    return body, rest
-
-
-def removeOctetString(string):
-    _checkSequenceError(string=string, start=bytesHexD, expected="04")
-
-    length, lengthLen = _readLength(string[1:])
-    body = string[1 + lengthLen:1 + lengthLen + length]
-    rest = string[1 + lengthLen + length:]
-
-    return body, rest
-
-
-def removeConstructed(string):
-    s0 = _extractFirstInt(string)
-    if (s0 & hex224) != hex129:
-        raise Exception("wanted constructed tag (0xa0-0xbf), got 0x%02x" % s0)
-
-    tag = s0 & hex31
-    length, lengthLen = _readLength(string[1:])
-    body = string[1 + lengthLen:1 + lengthLen + length]
-    rest = string[1 + lengthLen + length:]
-
-    return tag, body, rest
-
-
-def fromPem(pem):
-    t = "".join([
-        l.strip() for l in pem.splitlines()
-        if l and not l.startswith("-----")
-    ])
-    return Base64.decode(t)
-
-
-def toPem(der, name):
-    b64 = toString(Base64.encode(der))
-    lines = ["-----BEGIN " + name + "-----\n"]
-    lines.extend([
-        b64[start:start + 64] + '\n'
-        for start in xrange(0, len(b64), 64)
-    ])
-    lines.append("-----END " + name + "-----\n")
-
-    return "".join(lines)
-
-
-def _encodeLength(length):
-    assert length >= 0
-
-    if length < hex160:
-        return chr(length)
-
-    s = ("%x" % length).encode()
-    if len(s) % 2:
-        s = "0" + s
-
-    s = BinaryAscii.binaryFromHex(s)
-    lengthLen = len(s)
-
-    return chr(hex160 | lengthLen) + str(s)
-
-
-def _encodeNumber(n):
-    b128Digits = []
-    while n:
-        b128Digits.insert(0, (n & hex127) | hex160)
-        n >>= 7
-
-    if not b128Digits:
-        b128Digits.append(0)
-
-    b128Digits[-1] &= hex127
-
-    return "".join([chr(d) for d in b128Digits])
-
-
-def _readLength(string):
-    num = _extractFirstInt(string)
-    if not (num & hex160):
-        return (num & hex127), 1
-
-    lengthLen = num & hex127
-
-    if lengthLen > len(string) - 1:
-        raise Exception("ran out of length bytes")
-
-    return int(BinaryAscii.hexFromBinary(string[1:1 + lengthLen]), 16), 1 + lengthLen
-
-
-def _readNumber(string):
-    number = 0
-    lengthLen = 0
-    while True:
-        if lengthLen > len(string):
-            raise Exception("ran out of length bytes")
-
-        number <<= 7
-        d = string[lengthLen]
-        if not isinstance(d, intTypes):
-            d = ord(d)
-
-        number += (d & hex127)
-        lengthLen += 1
-        if not d & hex160:
-            break
-
-    return number, lengthLen
-
-
-def _checkSequenceError(string, start, expected):
-    if not string.startswith(start):
-        raise Exception(
-            "wanted sequence (0x%s), got 0x%02x" %
-            (expected, _extractFirstInt(string))
-        )
-
-
-def _extractFirstInt(string):
-    return string[0] if isinstance(string[0], intTypes) else ord(string[0])
+    integer = "integer"
+    bitString = "bitString"
+    octetString = "octetString"
+    null = "null"
+    object = "object"
+    printableString = "printableString"
+    utcTime = "utcTime"
+    sequence = "sequence"
+    set = "set"
+    oidContainer = "oidContainer"
+    publicKeyPointContainer = "publicKeyPointContainer"
+
+
+_hexTagToType = {
+    "02": DerFieldType.integer,
+    "03": DerFieldType.bitString,
+    "04": DerFieldType.octetString,
+    "05": DerFieldType.null,
+    "06": DerFieldType.object,
+    "13": DerFieldType.printableString,
+    "17": DerFieldType.utcTime,
+    "30": DerFieldType.sequence,
+    "31": DerFieldType.set,
+    "a0": DerFieldType.oidContainer,
+    "a1": DerFieldType.publicKeyPointContainer,
+}
+_typeToHexTag = {v: k for k, v in _hexTagToType.items()}
+
+
+def encodeConstructed(*encodedValues):
+    return encodePrimitive(DerFieldType.sequence, "".join(encodedValues))
+
+
+def encodePrimitive(tagType, value):
+    if tagType == DerFieldType.integer:
+        value = _encodeInteger(value)
+    if tagType == DerFieldType.object:
+        value = oidToHex(value)
+    return "{tag}{size}{value}".format(tag=_typeToHexTag[tagType], size=_generateLengthBytes(value), value=value)
+
+
+def parse(hexadecimal):
+    if not hexadecimal:
+        return []
+    typeByte, hexadecimal = hexadecimal[:2], hexadecimal[2:]
+    length, lengthBytes = _readLengthBytes(hexadecimal)
+    content, hexadecimal = hexadecimal[lengthBytes: lengthBytes + length], hexadecimal[lengthBytes + length:]
+    if len(content) < length:
+        raise Exception("missing bytes in DER parse")
+
+    tagData = _getTagData(typeByte)
+    if tagData["isConstructed"]:
+        content = parse(content)
+
+    valueParser = {
+        DerFieldType.null: _parseNull,
+        DerFieldType.object: _parseOid,
+        DerFieldType.utcTime: _parseTime,
+        DerFieldType.integer: _parseInteger,
+        DerFieldType.printableString: _parseString,
+    }.get(tagData["type"], _parseAny)
+    return [valueParser(content)] + parse(hexadecimal)
+
+
+def _parseAny(hexadecimal):
+    return hexadecimal
+
+
+def _parseOid(hexadecimal):
+    return tuple(oidFromHex(hexadecimal))
+
+
+def _parseTime(hexadecimal):
+    string = _parseString(hexadecimal)
+    return datetime.strptime(string, "%y%m%d%H%M%SZ")
+
+
+def _parseString(hexadecimal):
+    return byteStringFromHex(hexadecimal).decode()
+
+
+def _parseNull(_content):
+    return None
+
+
+def _parseInteger(hexadecimal):
+    integer = intFromHex(hexadecimal)
+    bits = bitsFromHex(hexadecimal[0])
+    if bits[0] == "0":  # negative numbers are encoded using two's complement
+        return integer
+    bitCount = 4 * len(hexadecimal)
+    return integer - (2 ** bitCount)
+
+
+def _encodeInteger(number):
+    hexadecimal = hexFromInt(abs(number))
+    if number < 0:
+        bitCount = 4 * len(hexadecimal)
+        twosComplement = (2 ** bitCount) + number
+        return hexFromInt(twosComplement)
+    bits = bitsFromHex(hexadecimal[0])
+    if bits[0] == "1":  # if first bit was left as 1, number would be parsed as a negative integer with two's complement
+        hexadecimal = "00" + hexadecimal
+    return hexadecimal
+
+
+def _readLengthBytes(hexadecimal):
+    lengthBytes = 2
+    lengthIndicator = intFromHex(hexadecimal[0:lengthBytes])
+    isShortForm = lengthIndicator < 128  # checks if first bit of byte is 1 (a.k.a. short-form)
+    if isShortForm:
+        length = lengthIndicator * 2
+        return length, lengthBytes
+
+    lengthLength = lengthIndicator - 128  # nullifies first bit of byte (only used as long-form flag)
+    if lengthLength == 0:
+        raise Exception("indefinite length encoding located in DER")
+    lengthBytes += 2 * lengthLength
+    length = intFromHex(hexadecimal[2:lengthBytes]) * 2
+    return length, lengthBytes
+
+
+def _generateLengthBytes(hexadecimal):
+    size = len(hexadecimal) // 2
+    length = hexFromInt(size)
+    if size < 128:  # checks if first bit of byte should be 0 (a.k.a. short-form flag)
+        return length.zfill(2)
+    lengthLength = 128 + len(length) // 2  # +128 sets the first bit of the byte as 1 (a.k.a. long-form flag)
+    return hexFromInt(lengthLength) + length
+
+
+def _getTagData(tag):
+    bits = bitsFromHex(tag)
+    bit8, bit7, bit6 = bits[:3]
+
+    tagClass = {
+        "0": {
+            "0": "universal",
+            "1": "application",
+        },
+        "1": {
+            "0": "context-specific",
+            "1": "private",
+        },
+    }[bit8][bit7]
+    isConstructed = bit6 == "1"
+
+    return {
+        "class": tagClass,
+        "isConstructed": isConstructed,
+        "type": _hexTagToType.get(tag),
+    }

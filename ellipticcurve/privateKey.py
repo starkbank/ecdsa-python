@@ -1,12 +1,10 @@
-from .utils.integer import RandomInteger
-from .utils.compatibility import *
-from .utils.binary import BinaryAscii
-from .utils.der import fromPem, removeSequence, removeInteger, removeObject, removeOctetString, removeConstructed, toPem, encodeSequence, encodeInteger, encodeBitString, encodeOid, encodeOctetString, encodeConstructed
-from .publicKey import PublicKey
-from .curve import secp256k1, curvesByOid, supportedCurves
 from .math import Math
-
-hexAt = "\x00"
+from .utils.integer import RandomInteger
+from .utils.pem import getPemContent, createPem
+from .utils.binary import hexFromByteString, byteStringFromHex, intFromHex, base64FromByteString, byteStringFromBase64
+from .utils.der import hexFromInt, parse, encodeConstructed, DerFieldType, encodePrimitive
+from .curve import secp256k1, getCurveByOid
+from .publicKey import PublicKey
 
 
 class PrivateKey:
@@ -27,69 +25,48 @@ class PrivateKey:
         return PublicKey(point=publicPoint, curve=curve)
 
     def toString(self):
-        return BinaryAscii.stringFromNumber(number=self.secret, length=self.curve.length())
+        return hexFromInt(self.secret)
 
     def toDer(self):
-        encodedPublicKey = self.publicKey().toString(encoded=True)
-
-        return encodeSequence(
-            encodeInteger(1),
-            encodeOctetString(self.toString()),
-            encodeConstructed(0, encodeOid(*self.curve.oid)),
-            encodeConstructed(1, encodeBitString(encodedPublicKey)),
+        publicKeyString = self.publicKey().toString(encoded=True)
+        hexadecimal = encodeConstructed(
+            encodePrimitive(DerFieldType.integer, 1),
+            encodePrimitive(DerFieldType.octetString, hexFromInt(self.secret)),
+            encodePrimitive(DerFieldType.oidContainer, encodePrimitive(DerFieldType.object, self.curve.oid)),
+            encodePrimitive(DerFieldType.publicKeyPointContainer, encodePrimitive(DerFieldType.bitString, publicKeyString))
         )
+        return byteStringFromHex(hexadecimal)
 
     def toPem(self):
-        return toPem(der=toBytes(self.toDer()), name="EC PRIVATE KEY")
+        der = self.toDer()
+        return createPem(content=base64FromByteString(der), template=_pemTemplate)
 
     @classmethod
     def fromPem(cls, string):
-        privateKeyPem = string[string.index("-----BEGIN EC PRIVATE KEY-----"):]
-        return cls.fromDer(fromPem(privateKeyPem))
+        privateKeyPem = getPemContent(pem=string, template=_pemTemplate)
+        return cls.fromDer(byteStringFromBase64(privateKeyPem))
 
     @classmethod
     def fromDer(cls, string):
-        t, empty = removeSequence(string)
-        if len(empty) != 0:
-            raise Exception(
-                "trailing junk after DER private key: " +
-                BinaryAscii.hexFromBinary(empty)
-            )
-
-        one, t = removeInteger(t)
-        if one != 1:
-            raise Exception(
-                "expected '1' at start of DER private key, got %d" % one
-            )
-
-        privateKeyStr, t = removeOctetString(t)
-        tag, curveOidStr, t = removeConstructed(t)
-        if tag != 0:
-            raise Exception("expected tag 0 in DER private key, got %d" % tag)
-
-        oidCurve, empty = removeObject(curveOidStr)
-
-        if len(empty) != 0:
-            raise Exception(
-                "trailing junk after DER private key curve_oid: %s" %
-                BinaryAscii.hexFromBinary(empty)
-            )
-
-        if oidCurve not in curvesByOid:
-            raise Exception(
-                "unknown curve with oid %s; The following are registered: %s" % (
-                    oidCurve,
-                    ", ".join([curve.name for curve in supportedCurves])
-                )
-            )
-
-        curve = curvesByOid[oidCurve]
-
-        if len(privateKeyStr) < curve.length():
-            privateKeyStr = hexAt * (curve.lenght() - len(privateKeyStr)) + privateKeyStr
-
-        return cls.fromString(privateKeyStr, curve)
+        hexadecimal = hexFromByteString(string)
+        privateKeyFlag, secretHex, curveData, publicKeyString = parse(hexadecimal)[0]
+        if privateKeyFlag != 1:
+            raise Exception("Private keys should start with a '1' flag, but a '{flag}' was found instead".format(
+                flag=privateKeyFlag
+            ))
+        curve = getCurveByOid(curveData[0])
+        privateKey = cls.fromString(string=secretHex, curve=curve)
+        if privateKey.publicKey().toString(encoded=True) != publicKeyString[0]:
+            raise Exception("The public key described inside the private key file doesn't match the actual public key of the pair")
+        return privateKey
 
     @classmethod
     def fromString(cls, string, curve=secp256k1):
-        return PrivateKey(secret=BinaryAscii.numberFromString(string), curve=curve)
+        return PrivateKey(secret=intFromHex(string), curve=curve)
+
+
+_pemTemplate = """
+-----BEGIN EC PRIVATE KEY-----
+{content}
+-----END EC PRIVATE KEY-----
+"""

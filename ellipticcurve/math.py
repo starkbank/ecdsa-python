@@ -16,14 +16,7 @@ class Math:
         :return: Point that represents the sum of First and Second Point
         """
         return cls._fromJacobian(
-            cls._jacobianMultiply(
-                cls._toJacobian(p),
-                n,
-                N,
-                A,
-                P,
-            ),
-            P,
+            cls._jacobianMultiply(cls._toJacobian(p), n, N, A, P), P
         )
 
     @classmethod
@@ -38,13 +31,7 @@ class Math:
         :return: Point that represents the sum of First and Second Point
         """
         return cls._fromJacobian(
-            cls._jacobianAdd(
-                cls._toJacobian(p),
-                cls._toJacobian(q),
-                A,
-                P,
-            ),
-            P,
+            cls._jacobianAdd(cls._toJacobian(p), cls._toJacobian(q), A, P), P,
         )
 
     @classmethod
@@ -59,12 +46,19 @@ class Math:
         if x == 0:
             return 0
 
-        lm, hm = 1, 0
-        low, high = x % n, n
+        lm = 1
+        hm = 0
+        low = x % n
+        high = n
+
         while low > 1:
             r = high // low
-            nm, new = hm - lm * r, high - low * r
-            lm, low, hm, high = nm, new, lm, low
+            nm = hm - lm * r
+            nw = high - low * r
+            high = low
+            hm = lm
+            low = nw
+            lm = nm
 
         return lm % n
 
@@ -88,11 +82,10 @@ class Math:
         :return: Point in default coordinates
         """
         z = cls.inv(p.z, P)
+        x = (p.x * z ** 2) % P
+        y = (p.y * z ** 3) % P
 
-        return Point(
-            (p.x * z ** 2) % P,
-            (p.y * z ** 3) % P,
-        )
+        return Point(x, y, 0)
 
     @classmethod
     def _jacobianDouble(cls, p, A, P):
@@ -113,6 +106,7 @@ class Math:
         nx = (M**2 - 2 * S) % P
         ny = (M * (S - nx) - 8 * ysq ** 2) % P
         nz = (2 * p.y * p.z) % P
+
         return Point(nx, ny, nz)
 
     @classmethod
@@ -126,9 +120,9 @@ class Math:
         :param A: Coefficient of the first-order term of the equation Y^2 = X^3 + A*X + B (mod p)
         :return: Point that represents the sum of First and Second Point
         """
-
         if not p.y:
             return q
+
         if not q.y:
             return p
 
@@ -176,31 +170,9 @@ class Math:
 
         if (n % 2) == 0:
             return cls._jacobianDouble(
-                cls._jacobianMultiply(
-                    p,
-                    n // 2,
-                    N,
-                    A,
-                    P
-                ),
-                A,
-                P,
+                cls._jacobianMultiply(p, n // 2, N, A, P), A, P
             )
 
-        # (n % 2) == 1:
         return cls._jacobianAdd(
-            cls._jacobianDouble(
-                cls._jacobianMultiply(
-                    p,
-                    n // 2,
-                    N,
-                    A,
-                    P,
-                ),
-                A,
-                P,
-            ),
-            p,
-            A,
-            P,
+            cls._jacobianDouble(cls._jacobianMultiply(p, n // 2, N, A, P), A, P), p, A, P
         )

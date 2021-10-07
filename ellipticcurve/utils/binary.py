@@ -1,49 +1,38 @@
-from .compatibility import *
+from base64 import b64encode, b64decode
+from ellipticcurve import toString
+from ellipticcurve.utils.compatibility import safeHexFromBinary, safeBinaryFromHex
 
 
-class BinaryAscii:
+def hexFromInt(number):
+    hexadecimal = "{0:x}".format(number)
+    if len(hexadecimal) % 2 == 1:
+        hexadecimal = "0" + hexadecimal
+    return hexadecimal
 
-    @classmethod
-    def hexFromBinary(cls, data):
-        """
-        Return the hexadecimal representation of the binary data. Every byte of data is converted into the
-        corresponding 2-digit hex representation. The resulting string is therefore twice as long as the length of data.
 
-        :param data: binary
-        :return: hexadecimal string
-        """
-        return safeHexFromBinary(data)
+def intFromHex(hexadecimal):
+    return int(hexadecimal, 16)
 
-    @classmethod
-    def binaryFromHex(cls, data):
-        """
-        Return the binary data represented by the hexadecimal string hexstr. This function is the inverse of b2a_hex().
-        hexstr must contain an even number of hexadecimal digits (which can be upper or lower case), otherwise a TypeError is raised.
 
-        :param data: hexadecimal string
-        :return: binary
-        """
-        return safeBinaryFromHex(data)
+def hexFromByteString(byteString):
+    return safeHexFromBinary(byteString)
 
-    @classmethod
-    def numberFromString(cls, string):
-        """
-        Get a number representation of a string
 
-        :param String to be converted in a number
-        :return: Number in hex from string
-        """
-        return int(cls.hexFromBinary(string), 16)
+def byteStringFromHex(hexadecimal):
+    return safeBinaryFromHex(hexadecimal)
 
-    @classmethod
-    def stringFromNumber(cls, number, length):
-        """
-        Get a string representation of a number
 
-        :param number to be converted in a string
-        :param length max number of character for the string
-        :return: hexadecimal string
-        """
+def numberFromByteString(byteString):
+    return intFromHex(hexFromByteString(byteString))
 
-        fmtStr = "%0" + str(2 * length) + "x"
-        return toString(cls.binaryFromHex((fmtStr % number).encode()))
+
+def base64FromByteString(byteString):
+    return toString(b64encode(byteString))
+
+
+def byteStringFromBase64(base64String):
+    return b64decode(base64String)
+
+
+def bitsFromHex(hexadecimal):
+    return format(intFromHex(hexadecimal), 'b').zfill(4 * len(hexadecimal))
