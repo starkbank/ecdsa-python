@@ -13,6 +13,8 @@ Given a version number MAJOR.MINOR.PATCH, increment:
 
 
 ## [Unreleased]
+### Fixed
+- Signature r and s range check
 
 ## [2.0.0] - 2021-10-08
 ### Added
