@@ -33,6 +33,10 @@ class Ecdsa:
         curve = publicKey.curve
         r = signature.r
         s = signature.s
+        if not 1 <= r <= curve.N - 1:
+            raise Exception("signature.r is not in the curve range")
+        if not 1 <= s <= curve.N - 1:
+            raise Exception("signature.s is not in the curve range")
         inv = Math.inv(s, curve.N)
         u1 = Math.multiply(curve.G, n=(numberMessage * inv) % curve.N, N=curve.N, A=curve.A, P=curve.P)
         u2 = Math.multiply(publicKey.point, n=(r * inv) % curve.N, N=curve.N, A=curve.A, P=curve.P)
