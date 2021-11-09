@@ -1,8 +1,9 @@
+from .math import Math
 from .point import Point
-from .utils.pem import getPemContent, createPem
-from .utils.binary import hexFromByteString, byteStringFromHex, intFromHex, base64FromByteString, byteStringFromBase64
-from .utils.der import hexFromInt, parse, DerFieldType, encodeConstructed, encodePrimitive
 from .curve import secp256k1, getCurveByOid
+from .utils.pem import getPemContent, createPem
+from .utils.der import hexFromInt, parse, DerFieldType, encodeConstructed, encodePrimitive
+from .utils.binary import hexFromByteString, byteStringFromHex, intFromHex, base64FromByteString, byteStringFromBase64
 
 
 class PublicKey:
@@ -65,12 +66,16 @@ class PublicKey:
             x=intFromHex(xs),
             y=intFromHex(ys),
         )
-        if validatePoint and not curve.contains(p):
-            raise Exception(
-                "Point ({x},{y}) is not valid for curve {name}".format(x=p.x, y=p.y, name=curve.name)
-            )
-
-        return PublicKey(point=p, curve=curve)
+        publicKey = PublicKey(point=p, curve=curve)
+        if not validatePoint:
+            return publicKey
+        if p.isAtInfinity():
+            raise Exception("Public Key point is at infinity")
+        if not curve.contains(p):
+            raise Exception("Point ({x},{y}) is not valid for curve {name}".format(x=p.x, y=p.y, name=curve.name))
+        if not Math.multiply(p=p, n=curve.N, N=curve.N, A=curve.A, P=curve.P).isAtInfinity():
+            raise Exception("Point ({x},{y}) * {name}.N is not at infinity".format(x=p.x, y=p.y, name=curve.name))
+        return publicKey
 
 
 _ecdsaPublicKeyOid = (1, 2, 840, 10045, 2, 1)
