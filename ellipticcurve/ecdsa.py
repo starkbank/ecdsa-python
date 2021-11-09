@@ -40,6 +40,7 @@ class Ecdsa:
         inv = Math.inv(s, curve.N)
         u1 = Math.multiply(curve.G, n=(numberMessage * inv) % curve.N, N=curve.N, A=curve.A, P=curve.P)
         u2 = Math.multiply(publicKey.point, n=(r * inv) % curve.N, N=curve.N, A=curve.A, P=curve.P)
-        add = Math.add(u1, u2, A=curve.A, P=curve.P)
-        modX = add.x % curve.N
-        return r == modX
+        v = Math.add(u1, u2, A=curve.A, P=curve.P)
+        if v.isAtInfinity():
+            return False
+        return v.x % curve.N == r

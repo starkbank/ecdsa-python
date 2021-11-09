@@ -1,5 +1,5 @@
 from unittest.case import TestCase
-from ellipticcurve import Ecdsa, PrivateKey
+from ellipticcurve import Ecdsa, PrivateKey, Signature
 
 
 class EcdsaTest(TestCase):
@@ -24,3 +24,11 @@ class EcdsaTest(TestCase):
         signature = Ecdsa.sign(message1, privateKey)
 
         self.assertFalse(Ecdsa.verify(message2, signature, publicKey))
+
+    def testZeroSignature(self):
+        privateKey = PrivateKey()
+        publicKey = privateKey.publicKey()
+
+        message2 = "This is the wrong message"
+
+        self.assertFalse(Ecdsa.verify(message2, Signature(0, 0), publicKey))

@@ -97,7 +97,7 @@ class Math:
         :param A: Coefficient of the first-order term of the equation Y^2 = X^3 + A*X + B (mod p)
         :return: Point that represents the sum of First and Second Point
         """
-        if not p.y:
+        if p.y == 0:
             return Point(0, 0, 0)
 
         ysq = (p.y ** 2) % P
@@ -120,10 +120,9 @@ class Math:
         :param A: Coefficient of the first-order term of the equation Y^2 = X^3 + A*X + B (mod p)
         :return: Point that represents the sum of First and Second Point
         """
-        if not p.y:
+        if p.y == 0:
             return q
-
-        if not q.y:
+        if q.y == 0:
             return p
 
         U1 = (p.x * q.z ** 2) % P
