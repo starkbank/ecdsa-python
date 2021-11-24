@@ -10,9 +10,9 @@ def oidFromHex(hexadecimal):
         byte, remainingBytes = remainingBytes[0:2], remainingBytes[2:]
         byteInt = intFromHex(byte)
         if byteInt >= 128:
-            oidInt = byteInt - 128
+            oidInt = (128 * oidInt) + (byteInt - 128)
             continue
-        oidInt = oidInt * 128 + byteInt
+        oidInt = (128 * oidInt) + byteInt
         oid.append(oidInt)
         oidInt = 0
     return oid
@@ -20,16 +20,16 @@ def oidFromHex(hexadecimal):
 
 def oidToHex(oid):
     hexadecimal = hexFromInt(40 * oid[0] + oid[1])
-    byteArray = []
-    for oidInt in oid[2:]:
-        endDelta = 0
-        while True:
-            byteInt = oidInt % 128 + endDelta
-            oidInt = oidInt // 128
-            endDelta = 128
-            byteArray.append(byteInt)
-            if oidInt == 0:
-                break
-        hexadecimal += "".join(hexFromInt(byteInt).zfill(2) for byteInt in reversed(byteArray))
-        byteArray = []
+    for number in oid[2:]:
+        hexadecimal += _oidNumberToHex(number)
     return hexadecimal
+
+
+def _oidNumberToHex(number):
+    hexadecimal = ""
+    endDelta = 0
+    while number > 0:
+        hexadecimal = hexFromInt((number % 128) + endDelta) + hexadecimal
+        number //= 128
+        endDelta = 128
+    return hexadecimal or "00"
