@@ -1,6 +1,6 @@
 from datetime import datetime
-from ellipticcurve.utils.oid import oidToHex, oidFromHex
-from ellipticcurve.utils.binary import hexFromInt, intFromHex, byteStringFromHex, bitsFromHex
+from .oid import oidToHex, oidFromHex
+from .binary import hexFromInt, intFromHex, byteStringFromHex, bitsFromHex
 
 
 class DerFieldType:

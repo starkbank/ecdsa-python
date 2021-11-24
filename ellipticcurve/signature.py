@@ -1,6 +1,6 @@
 from .utils.compatibility import *
-from .utils.binary import hexFromByteString, byteStringFromHex, base64FromByteString, byteStringFromBase64
 from .utils.der import parse, encodeConstructed, encodePrimitive, DerFieldType
+from .utils.binary import hexFromByteString, byteStringFromHex, base64FromByteString, byteStringFromBase64
 
 
 class Signature:
