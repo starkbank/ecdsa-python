@@ -13,6 +13,8 @@ Given a version number MAJOR.MINOR.PATCH, increment:
 
 
 ## [Unreleased]
+### Fixed
+- OID integer encoding when single number has more than 2 bytes
 
 ## [2.0.2] - 2021-11-09
 ### Fixed
