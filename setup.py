@@ -8,7 +8,7 @@ with open(path.join(path.dirname(__file__), "README.md")) as readme:
 
 setup(
     name="starkbank-ecdsa",
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests"]),
     include_package_data=True,
     description="A lightweight and fast pure python ECDSA library",
     long_description=README,
