@@ -13,6 +13,10 @@ Given a version number MAJOR.MINOR.PATCH, increment:
 
 
 ## [Unreleased]
+### Added
+- curve.add() function to dynamically add curves to the library
+### Changed
+- curve.getCurveByOid() to curve.getByOid()
 
 ## [2.0.3] - 2021-11-24
 ### Fixed
