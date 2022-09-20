@@ -3,7 +3,7 @@ from .utils.integer import RandomInteger
 from .utils.pem import getPemContent, createPem
 from .utils.binary import hexFromByteString, byteStringFromHex, intFromHex, base64FromByteString, byteStringFromBase64
 from .utils.der import hexFromInt, parse, encodeConstructed, DerFieldType, encodePrimitive
-from .curve import secp256k1, getCurveByOid
+from .curve import secp256k1, getByOid
 from .publicKey import PublicKey
 
 
@@ -54,7 +54,7 @@ class PrivateKey:
             raise Exception("Private keys should start with a '1' flag, but a '{flag}' was found instead".format(
                 flag=privateKeyFlag
             ))
-        curve = getCurveByOid(curveData[0])
+        curve = getByOid(curveData[0])
         privateKey = cls.fromString(string=secretHex, curve=curve)
         if privateKey.publicKey().toString(encoded=True) != publicKeyString[0]:
             raise Exception("The public key described inside the private key file doesn't match the actual public key of the pair")

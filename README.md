@@ -16,7 +16,7 @@ pip install starkbank-ecdsa
 
 ### Curves
 
-We currently support `secp256k1`, but it's super easy to add more curves to the project. Just add them on `curve.py`
+We currently support `secp256k1`, but you can add more curves to the project. You just need to use the curve.add() function.
 
 ### Speed
 
@@ -98,6 +98,34 @@ signature = Ecdsa.sign(message, privateKey)
 # To verify if the signature is valid
 print(Ecdsa.verify(message, signature, publicKey))
 
+```
+
+How to add more curves:
+
+```python
+from ellipticcurve import curve, PrivateKey, PublicKey
+
+newCurve = curve.CurveFp(
+    name="frp256v1",
+    A=0xf1fd178c0b3ad58f10126de8ce42435b3961adbcabc8ca6de8fcf353d86e9c00,
+    B=0xee353fca5428a9300d4aba754a44c00fdfec0c9ae4b1a1803075ed967b7bb73f,
+    P=0xf1fd178c0b3ad58f10126de8ce42435b3961adbcabc8ca6de8fcf353d86e9c03,
+    N=0xf1fd178c0b3ad58f10126de8ce42435b53dc67e140d2bf941ffdd459c6d655e1,
+    Gx=0xb6b3d4c356c139eb31183d4749d423958c27d2dcaf98b70164c97a2dd98f5cff,
+    Gy=0x6142e0f7c8b204911f9271f0f3ecef8c2701c307e8e4c9e183115a1554062cfb,
+    oid=[1, 2, 250, 1, 223, 101, 256, 1]
+)
+
+curve.add(newCurve)
+
+publicKeyPem = """-----BEGIN PUBLIC KEY-----
+MFswFQYHKoZIzj0CAQYKKoF6AYFfZYIAAQNCAATeEFFYiQL+HmDYTf+QDmvQmWGD
+dRJPqLj11do8okvkSxq2lwB6Ct4aITMlCyg3f1msafc/ROSN/Vgj69bDhZK6
+-----END PUBLIC KEY-----"""
+
+publicKey = PublicKey.fromPem(publicKeyPem)
+
+print(publicKey.toPem())
 ```
 
 ### OpenSSL

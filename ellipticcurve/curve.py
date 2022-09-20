@@ -37,6 +37,22 @@ class CurveFp:
         return (1 + len("%x" % self.N)) // 2
 
 
+_curvesByOid = {tuple(curve.oid): curve for curve in []}
+
+
+def add(curve):
+    _curvesByOid[tuple(curve.oid)] = curve
+
+
+def getByOid(oid):
+    if oid not in _curvesByOid:
+        raise Exception("Unknown curve with oid {oid}; The following are registered: {names}".format(
+            oid=".".join([str(number) for number in oid]),
+            names=", ".join([curve.name for curve in _curvesByOid.values()]),
+        ))
+    return _curvesByOid[oid]
+
+
 secp256k1 = CurveFp(
     name="secp256k1",
     A=0x0000000000000000000000000000000000000000000000000000000000000000,
@@ -62,18 +78,5 @@ prime256v1 = CurveFp(
 
 p256 = prime256v1
 
-supportedCurves = [
-    secp256k1,
-    prime256v1,
-]
-
-_curvesByOid = {tuple(curve.oid): curve for curve in supportedCurves}
-
-
-def getCurveByOid(oid):
-    if oid not in _curvesByOid:
-        raise Exception("Unknown curve with oid {oid}; The following are registered: {names}".format(
-            oid=".".join([str(number) for number in oid]),
-            names=", ".join([curve.name for curve in supportedCurves]),
-        ))
-    return _curvesByOid[oid]
+add(secp256k1)
+add(prime256v1)
