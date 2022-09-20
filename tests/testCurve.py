@@ -61,14 +61,14 @@ class CurveTest(TestCase):
 
     def testUnsupportedCurve(self):
         newCurve = curve.CurveFp(
-            name="frp256v1",
-            A=0xf1fd178c0b3ad58f10126de8ce42435b3961adbcabc8ca6de8fcf353d86e9c00,
-            B=0xee353fca5428a9300d4aba754a44c00fdfec0c9ae4b1a1803075ed967b7bb73f,
-            P=0xf1fd178c0b3ad58f10126de8ce42435b3961adbcabc8ca6de8fcf353d86e9c03,
-            N=0xf1fd178c0b3ad58f10126de8ce42435b53dc67e140d2bf941ffdd459c6d655e1,
-            Gx=0xb6b3d4c356c139eb31183d4749d423958c27d2dcaf98b70164c97a2dd98f5cff,
-            Gy=0x6142e0f7c8b204911f9271f0f3ecef8c2701c307e8e4c9e183115a1554062cfb,
-            oid=[1, 2, 250, 1, 223, 101, 256, 1]
+            name="brainpoolP256t1",
+            A=0xa9fb57dba1eea9bc3e660a909d838d726e3bf623d52620282013481d1f6e5374,
+            B=0x662c61c430d84ea4fe66a7733d0b76b7bf93ebc4af2f49256ae58101fee92b04,
+            P=0xa9fb57dba1eea9bc3e660a909d838d726e3bf623d52620282013481d1f6e5377,
+            N=0xa9fb57dba1eea9bc3e660a909d838d718c397aa3b561a6f7901e0e82974856a7,
+            Gx=0xa3e8eb3cc1cfe7b7732213b23a656149afa142c47aafbc2b79a191562e1305f4,
+            Gy=0x2d996c823439c56d7f7b22e14644417e69bcb6de39d027001dabe8f35b25c9be,
+            oid=[1, 3, 36, 3, 3, 2, 8, 1, 1, 8]
         )
 
         privateKeyPem = PrivateKey(curve=newCurve).toPem()

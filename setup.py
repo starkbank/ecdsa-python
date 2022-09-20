@@ -18,7 +18,7 @@ setup(
     author="Stark Bank",
     author_email="developers@starkbank.com",
     keywords=["ecdsa", "elliptic curve", "elliptic", "curve", "stark bank", "starkbank", "cryptograph", "secp256k1", "prime256v1"],
-    version="2.0.3"
+    version="2.1.0"
 )
 
 

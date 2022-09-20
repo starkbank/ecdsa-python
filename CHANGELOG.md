@@ -13,6 +13,8 @@ Given a version number MAJOR.MINOR.PATCH, increment:
 
 
 ## [Unreleased]
+
+## [2.1.0] - 2022-09-20
 ### Added
 - curve.add() function to dynamically add curves to the library
 ### Changed
