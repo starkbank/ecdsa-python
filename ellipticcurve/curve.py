@@ -3,6 +3,7 @@
 #
 # y^2 = x^3 + A*x + B (mod P)
 #
+from .math import Math
 from .point import Point
 
 
@@ -35,6 +36,13 @@ class CurveFp:
 
     def length(self):
         return (1 + len("%x" % self.N)) // 2
+
+    def y(self, x, isEven):
+        ySquared = (pow(x, 3, self.P) + self.A * x + self.B) % self.P
+        y = Math.modularSquareRoot(ySquared, self.P)
+        if isEven != (y % 2 == 0):
+            y = self.P - y
+        return y
 
 
 _curvesByOid = {tuple(curve.oid): curve for curve in []}
