@@ -4,6 +4,10 @@ from .point import Point
 class Math:
 
     @classmethod
+    def modularSquareRoot(cls, value, prime):
+        return pow(value, (prime + 1) // 4, prime)
+
+    @classmethod
     def multiply(cls, p, n, N, A, P):
         """
         Fast way to multily point and scalar in elliptic curves

@@ -21,6 +21,12 @@ class PublicKey:
             return "0004" + string
         return string
 
+    def toCompressed(self):
+        baseLength = 2 * self.curve.length()
+        parityTag = _evenTag if self.point.y % 2 == 0 else _oddTag
+        xHex = hexFromInt(self.point.x).zfill(baseLength)
+        return parityTag + xHex
+
     def toDer(self):
         hexadecimal = encodeConstructed(
             encodeConstructed(
@@ -76,6 +82,19 @@ class PublicKey:
         if not Math.multiply(p=p, n=curve.N, N=curve.N, A=curve.A, P=curve.P).isAtInfinity():
             raise Exception("Point ({x},{y}) * {name}.N is not at infinity".format(x=p.x, y=p.y, name=curve.name))
         return publicKey
+        
+    @classmethod
+    def fromCompressed(cls, string, curve=secp256k1):
+        parityTag, xHex = string[:2], string[2:]
+        if parityTag not in [_evenTag, _oddTag]:
+            raise Exception("Compressed string should start with 02 or 03")
+        x = intFromHex(xHex)
+        y = curve.y(x, isEven=parityTag == _evenTag)
+        return cls(point=Point(x, y), curve=curve)
+
+
+_evenTag = "02"
+_oddTag = "03"
 
 
 _ecdsaPublicKeyOid = (1, 2, 840, 10045, 2, 1)

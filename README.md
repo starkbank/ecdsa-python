@@ -128,6 +128,29 @@ publicKey = PublicKey.fromPem(publicKeyPem)
 print(publicKey.toPem())
 ```
 
+How to generate compressed public key:
+
+```python
+from ellipticcurve import PrivateKey, PublicKey
+
+privateKey = PrivateKey()
+publicKey = privateKey.publicKey()
+compressedPublicKey = publicKey.toCompressed()
+
+print(compressedPublicKey)
+```
+
+How to recover a compressed public key:
+
+```python
+from ellipticcurve import PrivateKey, PublicKey
+
+compressedPublicKey = "0252972572d465d016d4c501887b8df303eee3ed602c056b1eb09260dfa0da0ab2"
+publicKey = PublicKey.fromCompressed(compressedPublicKey)
+
+print(publicKey.toPem())
+```
+
 ### OpenSSL
 
 This library is compatible with OpenSSL, so you can use it to generate keys:
