@@ -9,9 +9,13 @@ if pyVersion.major == 3:
     intTypes = (int, float)
 
     def toString(string, encoding="utf-8"):
+        if isinstance(string,str):
+            return string
         return string.decode(encoding)
 
     def toBytes(string, encoding="utf-8"):
+        if isinstance(string,bytes):
+            return string
         return string.encode(encoding)
 
     def safeBinaryFromHex(hexadecimal):
