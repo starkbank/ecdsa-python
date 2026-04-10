@@ -32,8 +32,8 @@ class Ecdsa:
 
     @classmethod
     def verify(cls, message, signature, publicKey, hashfunc=sha256):
-        byteMessage = hashfunc(toBytes(message)).digest()
         curve = publicKey.curve
+        byteMessage = hashfunc(toBytes(message)).digest()
         numberMessage = numberFromByteString(byteMessage, curve.N.bit_length())
         r = signature.r
         s = signature.s
@@ -45,9 +45,11 @@ class Ecdsa:
         if not curve.contains(publicKey.point):
             return False
         inv = Math.inv(s, curve.N)
-        u1 = Math.multiply(curve.G, n=(numberMessage * inv) % curve.N, N=curve.N, A=curve.A, P=curve.P)
-        u2 = Math.multiply(publicKey.point, n=(r * inv) % curve.N, N=curve.N, A=curve.A, P=curve.P)
-        v = Math.add(u1, u2, A=curve.A, P=curve.P)
+        v = Math.multiplyAndAdd(
+            curve.G, (numberMessage * inv) % curve.N,
+            publicKey.point, (r * inv) % curve.N,
+            N=curve.N, A=curve.A, P=curve.P,
+        )
         if v.isAtInfinity():
             return False
         return v.x % curve.N == r

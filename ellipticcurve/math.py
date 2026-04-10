@@ -80,6 +80,29 @@ class Math:
         )
 
     @classmethod
+    def multiplyAndAdd(cls, p1, n1, p2, n2, N, A, P):
+        """
+        Compute n1*p1 + n2*p2 using Shamir's trick (simultaneous double-and-add).
+        Not constant-time — use only with public scalars (e.g. verification).
+
+        :param p1: First point
+        :param n1: First scalar
+        :param p2: Second point
+        :param n2: Second scalar
+        :param N: Order of the elliptic curve
+        :param A: Coefficient of the first-order term of the equation Y^2 = X^3 + A*X + B (mod p)
+        :param P: Prime number in the module of the equation Y^2 = X^3 + A*X + B (mod p)
+        :return: Point n1*p1 + n2*p2
+        """
+        return cls._fromJacobian(
+            cls._shamirMultiply(
+                cls._toJacobian(p1), n1,
+                cls._toJacobian(p2), n2,
+                N, A, P,
+            ), P,
+        )
+
+    @classmethod
     def inv(cls, x, n):
         """
         Modular inverse using Fermat's little theorem: x^(n-2) mod n.
@@ -134,15 +157,18 @@ class Math:
         :param A: Coefficient of the first-order term of the equation Y^2 = X^3 + A*X + B (mod p)
         :return: Point that represents the sum of First and Second Point
         """
-        if p.y == 0:
+        py = p.y
+        if py == 0:
             return Point(0, 0, 0)
 
-        ysq = (p.y ** 2) % P
-        S = (4 * p.x * ysq) % P
-        M = (3 * p.x ** 2 + A * p.z ** 4) % P
-        nx = (M**2 - 2 * S) % P
-        ny = (M * (S - nx) - 8 * ysq ** 2) % P
-        nz = (2 * p.y * p.z) % P
+        px, pz = p.x, p.z
+        ysq = (py * py) % P
+        S = (4 * px * ysq) % P
+        pz2 = (pz * pz) % P
+        M = (3 * px * px + A * pz2 * pz2) % P
+        nx = (M * M - 2 * S) % P
+        ny = (M * (S - nx) - 8 * ysq * ysq) % P
+        nz = (2 * py * pz) % P
 
         return Point(nx, ny, nz)
 
@@ -162,10 +188,15 @@ class Math:
         if q.y == 0:
             return p
 
-        U1 = (p.x * q.z ** 2) % P
-        U2 = (q.x * p.z ** 2) % P
-        S1 = (p.y * q.z ** 3) % P
-        S2 = (q.y * p.z ** 3) % P
+        px, py, pz = p.x, p.y, p.z
+        qx, qy, qz = q.x, q.y, q.z
+
+        qz2 = (qz * qz) % P
+        pz2 = (pz * pz) % P
+        U1 = (px * qz2) % P
+        U2 = (qx * pz2) % P
+        S1 = (py * qz2 * qz) % P
+        S2 = (qy * pz2 * pz) % P
 
         if U1 == U2:
             if S1 != S2:
@@ -177,9 +208,9 @@ class Math:
         H2 = (H * H) % P
         H3 = (H * H2) % P
         U1H2 = (U1 * H2) % P
-        nx = (R ** 2 - H3 - 2 * U1H2) % P
+        nx = (R * R - H3 - 2 * U1H2) % P
         ny = (R * (U1H2 - nx) - S1 * H3) % P
-        nz = (H * p.z * q.z) % P
+        nz = (H * pz * qz) % P
 
         return Point(nx, ny, nz)
 
@@ -205,16 +236,58 @@ class Math:
         if n == 0:
             return Point(0, 0, 1)
 
+        _add = cls._jacobianAdd
+        _double = cls._jacobianDouble
+
         # Montgomery ladder: always performs one add and one double per bit
         r0 = Point(0, 0, 1)
         r1 = Point(p.x, p.y, p.z)
 
         for i in range(n.bit_length() - 1, -1, -1):
             if (n >> i) & 1 == 0:
-                r1 = cls._jacobianAdd(r0, r1, A, P)
-                r0 = cls._jacobianDouble(r0, A, P)
+                r1 = _add(r0, r1, A, P)
+                r0 = _double(r0, A, P)
             else:
-                r0 = cls._jacobianAdd(r0, r1, A, P)
-                r1 = cls._jacobianDouble(r1, A, P)
+                r0 = _add(r0, r1, A, P)
+                r1 = _double(r1, A, P)
 
         return r0
+
+    @classmethod
+    def _shamirMultiply(cls, jp1, n1, jp2, n2, N, A, P):
+        """
+        Compute n1*p1 + n2*p2 using Shamir's trick (simultaneous double-and-add).
+        Not constant-time — use only with public scalars (e.g. verification).
+
+        :param jp1: First point in Jacobian coordinates
+        :param n1: First scalar
+        :param jp2: Second point in Jacobian coordinates
+        :param n2: Second scalar
+        :param N: Order of the elliptic curve
+        :param A: Coefficient of the first-order term of the equation Y^2 = X^3 + A*X + B (mod p)
+        :param P: Prime number in the module of the equation Y^2 = X^3 + A*X + B (mod p)
+        :return: Point n1*p1 + n2*p2 in Jacobian coordinates
+        """
+        if n1 < 0 or n1 >= N:
+            n1 = n1 % N
+        if n2 < 0 or n2 >= N:
+            n2 = n2 % N
+
+        jp1p2 = cls._jacobianAdd(jp1, jp2, A, P)
+
+        _add = cls._jacobianAdd
+        _double = cls._jacobianDouble
+
+        l = max(n1.bit_length(), n2.bit_length())
+        r = Point(0, 0, 1)
+
+        for i in range(l - 1, -1, -1):
+            r = _double(r, A, P)
+            b1 = (n1 >> i) & 1
+            b2 = (n2 >> i) & 1
+            if b1:
+                r = _add(r, jp1p2 if b2 else jp1, A, P)
+            elif b2:
+                r = _add(r, jp2, A, P)
+
+        return r

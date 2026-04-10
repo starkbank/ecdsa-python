@@ -6,6 +6,17 @@ We tried other Python libraries such as [python-ecdsa], [fast-ecdsa] and other l
 
 For this reason, we decided to create something simple, compatible with OpenSSL and fast using elegant math such as Jacobian Coordinates to speed up the ECDSA. Starkbank-ECDSA is fully compatible with Python2 and Python3.
 
+### Security
+
+starkbank-ecdsa includes the following security features:
+
+- **RFC 6979 deterministic nonces**: Eliminates the catastrophic risk of nonce reuse that leaks private keys
+- **Low-S signature normalization**: Prevents signature malleability (BIP-62)
+- **Public key on-curve validation**: Blocks invalid-curve attacks during verification
+- **Montgomery ladder scalar multiplication**: Constant-operation point multiplication to mitigate timing side channels
+- **Hash truncation**: Correctly handles hash functions larger than the curve order (e.g. SHA-512 with secp256k1)
+- **Fermat's little theorem for modular inverse**: More uniform execution time than the extended Euclidean algorithm
+
 ### Installation
 
 To install StarkBank`s ECDSA-Python, run:
@@ -16,19 +27,21 @@ pip install starkbank-ecdsa
 
 ### Curves
 
-We currently support `secp256k1`, but you can add more curves to the project. You just need to use the curve.add() function.
+We currently support `secp256k1` and `prime256v1` (P-256), but you can add more curves to the project. You just need to use the curve.add() function.
 
 ### Speed
 
-We ran a test on a MAC Pro i7 2017. The libraries were run 100 times and the averages displayed bellow were obtained:
+We ran a test on a MAC Pro i7 2017. The libraries were run 100 times and the averages displayed below were obtained:
 
 | Library            | sign          | verify  |
 | ------------------ |:-------------:| -------:|
 | [python-ecdsa]     |   121.3ms     | 65.1ms  |
 | [fast-ecdsa]       |     0.1ms     |  0.2ms  |
-| starkbank-ecdsa    |     4.1ms     |  7.8ms  |
+| starkbank-ecdsa    |     3.5ms     |  2.7ms  |
 
-Our pure Python code cannot compete with C based libraries, but it's `6x faster` to verify and `23x faster` to sign than other pure Python libraries.
+Our pure Python code cannot compete with C based libraries, but it's `24x faster` to verify and `35x faster` to sign than other pure Python libraries.
+
+Cursor uses Jacobian Coordinates, a Montgomery ladder for constant-time scalar multiplication, and Shamir's trick for fast signature verification.
 
 ### Sample Code
 
@@ -217,6 +230,12 @@ print(signature.toBase64())
 ```
 python3 -m unittest discover
 python2 -m unittest discover
+```
+
+### Run benchmark
+
+```
+python3 benchmark.py
 ```
 
 
