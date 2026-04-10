@@ -5,7 +5,48 @@ class Math:
 
     @classmethod
     def modularSquareRoot(cls, value, prime):
-        return pow(value, (prime + 1) // 4, prime)
+        """Tonelli-Shanks algorithm for modular square root. Works for all odd primes."""
+        if value == 0:
+            return 0
+        if prime == 2:
+            return value % 2
+
+        # Factor out powers of 2: prime - 1 = Q * 2^S
+        Q = prime - 1
+        S = 0
+        while Q % 2 == 0:
+            Q //= 2
+            S += 1
+
+        if S == 1:  # prime = 3 (mod 4)
+            return pow(value, (prime + 1) // 4, prime)
+
+        # Find a quadratic non-residue z
+        z = 2
+        while pow(z, (prime - 1) // 2, prime) != prime - 1:
+            z += 1
+
+        M = S
+        c = pow(z, Q, prime)
+        t = pow(value, Q, prime)
+        R = pow(value, (Q + 1) // 2, prime)
+
+        while True:
+            if t == 1:
+                return R
+
+            # Find the least i such that t^(2^i) = 1 (mod prime)
+            i = 1
+            temp = (t * t) % prime
+            while temp != 1:
+                temp = (temp * temp) % prime
+                i += 1
+
+            b = pow(c, 1 << (M - i - 1), prime)
+            M = i
+            c = (b * b) % prime
+            t = (t * c) % prime
+            R = (R * b) % prime
 
     @classmethod
     def multiply(cls, p, n, N, A, P):
@@ -41,30 +82,19 @@ class Math:
     @classmethod
     def inv(cls, x, n):
         """
-        Extended Euclidean Algorithm. It's the 'division' in elliptic curves
+        Modular inverse using Fermat's little theorem: x^(n-2) mod n.
+        Requires n to be prime (true for all ECDSA curve parameters).
+        Uses Python's built-in pow() which has more uniform execution time
+        than the extended Euclidean algorithm.
 
         :param x: Divisor
-        :param n: Mod for division
+        :param n: Mod for division (must be prime)
         :return: Value representing the division
         """
         if x == 0:
             return 0
 
-        lm = 1
-        hm = 0
-        low = x % n
-        high = n
-
-        while low > 1:
-            r = high // low
-            nm = hm - lm * r
-            nw = high - low * r
-            high = low
-            hm = lm
-            low = nw
-            lm = nm
-
-        return lm % n
+        return pow(x, n - 2, n)
 
     @classmethod
     def _toJacobian(cls, p):
@@ -85,6 +115,9 @@ class Math:
         :param P: Prime number in the module of the equation Y^2 = X^3 + A*X + B (mod p)
         :return: Point in default coordinates
         """
+        if p.y == 0:
+            return Point(0, 0, 0)
+
         z = cls.inv(p.z, P)
         x = (p.x * z ** 2) % P
         y = (p.y * z ** 3) % P
@@ -153,29 +186,35 @@ class Math:
     @classmethod
     def _jacobianMultiply(cls, p, n, N, A, P):
         """
-        Multily point and scalar in elliptic curves
+        Multiply point and scalar in elliptic curves using Montgomery ladder
+        for constant-time execution.
 
-        :param p: First Point to mutiply
-        :param n: Scalar to mutiply
+        :param p: First Point to multiply
+        :param n: Scalar to multiply
         :param N: Order of the elliptic curve
         :param P: Prime number in the module of the equation Y^2 = X^3 + A*X + B (mod p)
         :param A: Coefficient of the first-order term of the equation Y^2 = X^3 + A*X + B (mod p)
-        :return: Point that represents the sum of First and Second Point
+        :return: Point that represents the scalar multiplication
         """
         if p.y == 0 or n == 0:
             return Point(0, 0, 1)
 
-        if n == 1:
-            return p
-
         if n < 0 or n >= N:
-            return cls._jacobianMultiply(p, n % N, N, A, P)
+            n = n % N
 
-        if (n % 2) == 0:
-            return cls._jacobianDouble(
-                cls._jacobianMultiply(p, n // 2, N, A, P), A, P
-            )
+        if n == 0:
+            return Point(0, 0, 1)
 
-        return cls._jacobianAdd(
-            cls._jacobianDouble(cls._jacobianMultiply(p, n // 2, N, A, P), A, P), p, A, P
-        )
+        # Montgomery ladder: always performs one add and one double per bit
+        r0 = Point(0, 0, 1)
+        r1 = Point(p.x, p.y, p.z)
+
+        for i in range(n.bit_length() - 1, -1, -1):
+            if (n >> i) & 1 == 0:
+                r1 = cls._jacobianAdd(r0, r1, A, P)
+                r0 = cls._jacobianDouble(r0, A, P)
+            else:
+                r0 = cls._jacobianAdd(r0, r1, A, P)
+                r1 = cls._jacobianDouble(r1, A, P)
+
+        return r0
