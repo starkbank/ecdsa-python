@@ -28,3 +28,15 @@ class SignatureTest(TestCase):
 
         self.assertEqual(signature1.r, signature2.r)
         self.assertEqual(signature1.s, signature2.s)
+
+    def testUniqueness(self):
+        privateKey = PrivateKey()
+        message = "This is a text message"
+
+        signature1 = Ecdsa.sign(message, privateKey)
+        signature2 = Ecdsa.sign(message, privateKey)
+
+        base641 = signature1.toBase64()
+        base642 = signature2.toBase64()
+
+        self.assertNotEqual(base641, base642)
