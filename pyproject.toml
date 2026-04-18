@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "starkbank-ecdsa"
+version = "2.2.0"
+description = "A lightweight and fast pure python ECDSA library"
+authors = ["Stark Bank <developers@starkbank.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/starkbank/ecdsa-python"
+packages = [
+    { include = "ellipticcurve" },
+]
+keywords=["ecdsa", "elliptic curve", "elliptic", "curve", "stark bank", "starkbank", "cryptograph", "secp256k1", "prime256v1"]
+
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
