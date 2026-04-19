@@ -14,6 +14,7 @@ class CurveFp:
         self.B = B
         self.P = P
         self.N = N
+        self.nBitLength = N.bit_length()
         self.G = Point(Gx, Gy)
         self.name = name
         self.nistName = nistName

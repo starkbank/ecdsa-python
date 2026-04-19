@@ -24,12 +24,17 @@ class Signature:
     def fromDer(cls, string, recoveryByte=False):
         recoveryId = None
         if recoveryByte:
-            recoveryId = string[0] if isinstance(string[0], intTypes) else ord(string[0])
-            recoveryId -= 27
+            rawByte = string[0] if isinstance(string[0], intTypes) else ord(string[0])
+            if not 27 <= rawByte <= 30:
+                raise Exception("Recovery byte must be in [27, 30], got {b}".format(b=rawByte))
+            recoveryId = rawByte - 27
             string = string[1:]
 
         hexadecimal = hexFromByteString(string)
-        return cls._fromString(string=hexadecimal, recoveryId=recoveryId)
+        signature = cls._fromString(string=hexadecimal, recoveryId=recoveryId)
+        if byteStringFromHex(signature._toString()) != string:
+            raise Exception("Signature is not in canonical DER form")
+        return signature
 
     @classmethod
     def fromBase64(cls, string, recoveryByte=False):
