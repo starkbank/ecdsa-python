@@ -229,12 +229,14 @@ print(signature.toBase64())
 
 ```
 python3 -m unittest discover
+python2 -m unittest discover
 ```
 
 ### Run benchmark
 
 ```
 python3 benchmark.py
+python2 benchmark.py
 ```
 
 

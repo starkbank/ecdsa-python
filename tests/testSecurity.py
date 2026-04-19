@@ -30,12 +30,12 @@ class Prime256v1PublicKeyDerivationTest(TestCase):
 
     def testSampleMessageRoundTrip(self):
         sig = Ecdsa.sign("sample", self.privateKey)
-        self.assertTrue(sig.s <= prime256v1.N // 2)
+        self.assertLessEqual(sig.s, prime256v1.N // 2)
         self.assertTrue(Ecdsa.verify("sample", sig, self.publicKey))
 
     def testTestMessageRoundTrip(self):
         sig = Ecdsa.sign("test", self.privateKey)
-        self.assertTrue(sig.s <= prime256v1.N // 2)
+        self.assertLessEqual(sig.s, prime256v1.N // 2)
         self.assertTrue(Ecdsa.verify("test", sig, self.publicKey))
 
 
@@ -65,7 +65,7 @@ class MalleabilityTest(TestCase):
         for _ in range(100):
             privateKey = PrivateKey()
             signature = Ecdsa.sign("test message", privateKey)
-            self.assertTrue(signature.s <= privateKey.curve.N // 2)
+            self.assertLessEqual(signature.s, privateKey.curve.N // 2)
 
     def testHighSSignatureStillVerifies(self):
         """verify() accepts high-s for OpenSSL compatibility; sign() prevents malleability"""
@@ -349,7 +349,7 @@ class Prime256v1SecurityTest(TestCase):
 
         signature = Ecdsa.sign(message, privateKey)
 
-        self.assertTrue(signature.s <= prime256v1.N // 2)
+        self.assertLessEqual(signature.s, prime256v1.N // 2)
         self.assertTrue(Ecdsa.verify(message, signature, publicKey))
 
     def testSignaturesAreHedged(self):
