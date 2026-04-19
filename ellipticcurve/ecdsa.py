@@ -18,7 +18,7 @@ class Ecdsa:
         kIterator = RandomInteger.rfc6979(byteMessage, privateKey.secret, curve, hashfunc)
         while r == 0 or s == 0:
             randNum = next(kIterator)
-            randSignPoint = Math.multiply(curve.G, n=randNum, N=curve.N, A=curve.A, P=curve.P)
+            randSignPoint = Math.multiplyGenerator(curve, randNum)
             r = randSignPoint.x % curve.N
             s = ((numberMessage + r * privateKey.secret) * (Math.inv(randNum, curve.N))) % curve.N
         recoveryId = randSignPoint.y & 1
@@ -45,9 +45,11 @@ class Ecdsa:
         if not curve.contains(publicKey.point):
             return False
         inv = Math.inv(s, curve.N)
-        u1 = Math.multiply(curve.G, n=(numberMessage * inv) % curve.N, N=curve.N, A=curve.A, P=curve.P)
-        u2 = Math.multiply(publicKey.point, n=(r * inv) % curve.N, N=curve.N, A=curve.A, P=curve.P)
-        v = Math.add(u1, u2, A=curve.A, P=curve.P)
+        v = Math.multiplyAndAdd(
+            curve.G, (numberMessage * inv) % curve.N,
+            publicKey.point, (r * inv) % curve.N,
+            curve=curve,
+        )
         if v.isAtInfinity():
             return False
         return v.x % curve.N == r
