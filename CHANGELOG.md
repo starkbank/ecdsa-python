@@ -13,6 +13,9 @@ Given a version number MAJOR.MINOR.PATCH, increment:
 
 
 ## [Unreleased]
+
+
+## [2.3.1] - 2026-04-23
 ### Fixed
 - Package name normalized to use underscores to comply with PyPI filename requirements
 
