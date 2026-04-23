@@ -4,7 +4,18 @@
 
 We tried other Python libraries such as [python-ecdsa], [fast-ecdsa] and other less famous ones, but we didn't find anything that suited our needs. The first one was pure Python, but it was too slow. The second one mixed Python and C and it was really fast, but we were unable to use it in our current infrastructure, which required pure Python code.
 
-For this reason, we decided to create something simple, compatible with OpenSSL and fast using elegant math such as Jacobian Coordinates to speed up the ECDSA. Starkbank-ECDSA is fully compatible with Python2 and Python3.
+For this reason, we decided to create something simple, compatible with OpenSSL and fast using elegant math such as Jacobian Coordinates to speed up the ECDSA. Starkbank-ECDSA is fully compatible with Python 2.7 and Python 3.
+
+### Security
+
+starkbank-ecdsa includes the following security features:
+
+- **Hedged RFC 6979 nonces**: Deterministic k derivation with fresh random entropy mixed into K-init (RFC 6979 §3.6), eliminating the catastrophic risk of nonce reuse that leaks private keys while preserving protection even if the RNG fails
+- **Low-S signature normalization**: Prevents signature malleability (BIP-62)
+- **Public key on-curve validation**: Blocks invalid-curve attacks during verification
+- **Montgomery ladder scalar multiplication**: Constant-operation point multiplication to mitigate timing side channels
+- **Hash truncation**: Correctly handles hash functions larger than the curve order (e.g. SHA-512 with secp256k1)
+- **Extended Euclidean modular inverse**: Implemented in pure Python for portability (Python 2.7+ and 3.x); transparently uses the C-level `pow(x, -1, n)` fast path on CPython 3.8+ for a roughly order-of-magnitude speedup over Fermat's little theorem on 256-bit operands
 
 ### Installation
 
@@ -16,19 +27,21 @@ pip install starkbank-ecdsa
 
 ### Curves
 
-We currently support `secp256k1`, but you can add more curves to the project. You just need to use the curve.add() function.
+We currently support `secp256k1` and `prime256v1` (P-256), but you can add more curves to the project. You just need to use the curve.add() function.
 
 ### Speed
 
-We ran a test on a MAC Pro i7 2017. The libraries were run 100 times and the averages displayed bellow were obtained:
+We ran a test on an Apple Silicon Mac with Python 3.14. The libraries were run 500 times on secp256k1 with SHA-256 and deterministic (RFC 6979) nonces, and the averages displayed below were obtained:
 
-| Library            | sign          | verify  |
-| ------------------ |:-------------:| -------:|
-| [python-ecdsa]     |   121.3ms     | 65.1ms  |
-| [fast-ecdsa]       |     0.1ms     |  0.2ms  |
-| starkbank-ecdsa    |     4.1ms     |  7.8ms  |
+| Library         |  sign  | verify |
+|-----------------|:------:|:------:|
+| [python-ecdsa]  | ~1.0ms | ~3.6ms |
+| [fast-ecdsa]    | ~1.0ms | ~1.3ms |
+| starkbank-ecdsa | ~0.6ms | ~1.7ms |
 
-Our pure Python code cannot compete with C based libraries, but it's `6x faster` to verify and `23x faster` to sign than other pure Python libraries.
+Our pure Python code cannot compete with C-based libraries backed by GMP's hand-tuned assembly, but it matches the fastest pure-Python implementation on signing and is roughly `30%` faster on verification.
+
+Performance is driven by Jacobian coordinates, a branch-balanced Montgomery ladder for variable-base scalar multiplication, a precomputed affine table of powers-of-two multiples of the generator (`[G, 2G, 4G, …, 2ⁿG]`) combined with a width-2 NAF of the scalar to eliminate doublings during signing, a mixed affine+Jacobian addition fast path, curve-specific shortcuts in point doubling (A=0 for secp256k1, A=-3 for prime256v1), the secp256k1 GLV endomorphism to split 256-bit scalars into two ~128-bit halves for a 4-scalar simultaneous multi-exponentiation during verification, Shamir's trick with Joint Sparse Form as the fallback path for curves without an efficient endomorphism, and the extended Euclidean algorithm for modular inversion.
 
 ### Sample Code
 
@@ -219,7 +232,14 @@ python3 -m unittest discover
 python2 -m unittest discover
 ```
 
+### Run benchmark
 
-[python-ecdsa]: https://github.com/warner/python-ecdsa
+```
+python3 benchmark.py
+python2 benchmark.py
+```
+
+
+[python-ecdsa]: https://github.com/tlsfuzzer/python-ecdsa
 [fast-ecdsa]: https://github.com/AntonKueltz/fastecdsa
 [Stark Bank]: https://starkbank.com

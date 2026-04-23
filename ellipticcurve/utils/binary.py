@@ -21,8 +21,13 @@ def byteStringFromHex(hexadecimal):
     return safeBinaryFromHex(hexadecimal)
 
 
-def numberFromByteString(byteString):
-    return intFromHex(hexFromByteString(byteString))
+def numberFromByteString(byteString, bitLength=None):
+    number = intFromHex(hexFromByteString(byteString))
+    if bitLength is not None:
+        hashBitLen = len(byteString) * 8
+        if hashBitLen > bitLength:
+            number >>= (hashBitLen - bitLength)
+    return number
 
 
 def base64FromByteString(byteString):

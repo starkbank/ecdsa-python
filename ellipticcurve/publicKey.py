@@ -90,7 +90,10 @@ class PublicKey:
             raise Exception("Compressed string should start with 02 or 03")
         x = intFromHex(xHex)
         y = curve.y(x, isEven=parityTag == _evenTag)
-        return cls(point=Point(x, y), curve=curve)
+        point = Point(x, y)
+        if not curve.contains(point):
+            raise Exception("Point ({x},{y}) is not valid for curve {name}".format(x=x, y=y, name=curve.name))
+        return cls(point=point, curve=curve)
 
 
 _evenTag = "02"
