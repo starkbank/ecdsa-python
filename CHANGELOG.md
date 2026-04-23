@@ -14,6 +14,10 @@ Given a version number MAJOR.MINOR.PATCH, increment:
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-04-23
+### Changed 
+- Security changes
+
 ## [2.2.0] - 2022-10-24
 ### Added
 - PublicKey.toCompressed() function to dump a public key in compressed format
