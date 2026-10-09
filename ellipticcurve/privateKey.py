@@ -11,7 +11,7 @@ class PrivateKey:
 
     def __init__(self, curve=secp256k1, secret=None):
         self.curve = curve
-        self.secret = secret or RandomInteger.between(1, curve.N - 1)
+        self.secret = secret if secret is not None else RandomInteger.between(1, curve.N - 1)
         if not 1 <= self.secret <= curve.N - 1:
             raise Exception("Secret must be in range [1, N-1] for curve {name}".format(name=curve.name))
 

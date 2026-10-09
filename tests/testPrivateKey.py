@@ -24,3 +24,11 @@ class PrivateKeyTest(TestCase):
         privateKey2 = PrivateKey.fromString(string)
         self.assertEqual(privateKey1.secret, privateKey2.secret)
         self.assertEqual(privateKey1.curve, privateKey2.curve)
+
+    def testZeroSecretRejected(self):
+        with self.assertRaises(Exception):
+            PrivateKey(secret=0)
+
+    def testZeroSecretStringRejected(self):
+        with self.assertRaises(Exception):
+            PrivateKey.fromString("00" * 32)
