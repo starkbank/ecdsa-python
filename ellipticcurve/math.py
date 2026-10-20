@@ -50,70 +50,6 @@ class Math:
             R = (R * b) % prime
 
     @classmethod
-    def multiplyGenerator(cls, curve, n):
-        """
-        Fast scalar multiplication n*G using a precomputed affine table of
-        powers-of-two multiples of G and the width-2 NAF of n. Every non-zero
-        NAF digit triggers one mixed add and zero doublings, trading the ~256
-        doublings of a windowed method for ~86 adds on average — a large net
-        reduction in field multiplications for 256-bit scalars.
-
-        :param curve: Elliptic curve with generator G
-        :param n: Scalar multiplier
-        :return: Point n*G
-        """
-        if n < 0 or n >= curve.N:
-            n = n % curve.N
-        if n == 0:
-            return Point(0, 0, 0)
-
-        table = cls._generatorPowersTable(curve)
-        A, P = curve.A, curve.P
-        _add = cls._jacobianAdd
-
-        r = Point(0, 0, 1)
-        i = 0
-        k = n
-        while k > 0:
-            if k & 1:
-                digit = 2 - (k & 3)  # -1 or +1
-                k -= digit
-                g = table[i]
-                if digit == 1:
-                    r = _add(r, g, A, P)
-                else:
-                    r = _add(r, Point(g.x, P - g.y, 1), A, P)
-            k >>= 1
-            i += 1
-        return cls._fromJacobian(r, P)
-
-    @classmethod
-    def _generatorPowersTable(cls, curve):
-        """
-        Build [G, 2G, 4G, ..., 2^nBitLength * G] in affine (z=1) form, so each
-        add in multiplyGenerator hits the mixed-add fast path.
-        """
-        cached = getattr(curve, "_generatorPowersTable_", None)
-        if cached is not None:
-            return cached
-        A, P = curve.A, curve.P
-        current = Point(curve.G.x, curve.G.y, 1)
-        table = [current]
-        # NAF of an nBitLength-bit scalar can be up to nBitLength+1 digits.
-        for _ in range(curve.nBitLength):
-            doubled = cls._jacobianDouble(current, A, P)
-            if doubled.y == 0:
-                current = doubled
-            else:
-                zInv = cls.inv(doubled.z, P)
-                zInv2 = (zInv * zInv) % P
-                zInv3 = (zInv2 * zInv) % P
-                current = Point((doubled.x * zInv2) % P, (doubled.y * zInv3) % P, 1)
-            table.append(current)
-        curve._generatorPowersTable_ = table
-        return table
-
-    @classmethod
     def multiply(cls, p, n, N, A, P):
         """
         Fast way to multily point and scalar in elliptic curves
@@ -404,12 +340,20 @@ class Math:
         _add = cls._jacobianAdd
         _double = cls._jacobianDouble
 
+        # Pad n to a fixed bit length by adding multiples of N (which doesn't
+        # change n*p), so the top bit is always set and the ladder touches
+        # the point at infinity only on its first step, whatever n is.
+        nBitLength = N.bit_length()
+        k = n + N
+        if k.bit_length() <= nBitLength:
+            k += N
+
         # Montgomery ladder: always performs one add and one double per bit
         r0 = Point(0, 0, 1)
         r1 = Point(p.x, p.y, p.z)
 
-        for i in range(n.bit_length() - 1, -1, -1):
-            if (n >> i) & 1 == 0:
+        for i in range(nBitLength, -1, -1):
+            if (k >> i) & 1 == 0:
                 r1 = _add(r0, r1, A, P)
                 r0 = _double(r0, A, P)
             else:

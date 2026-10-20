@@ -18,7 +18,7 @@ class Ecdsa:
         kIterator = RandomInteger.rfc6979(byteMessage, privateKey.secret, curve, hashfunc)
         while r == 0 or s == 0:
             randNum = next(kIterator)
-            randSignPoint = Math.multiplyGenerator(curve, randNum)
+            randSignPoint = Math.multiply(curve.G, n=randNum, N=curve.N, A=curve.A, P=curve.P)
             r = randSignPoint.x % curve.N
             s = ((numberMessage + r * privateKey.secret) * (Math.inv(randNum, curve.N))) % curve.N
         recoveryId = randSignPoint.y & 1

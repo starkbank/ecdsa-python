@@ -37,11 +37,11 @@ We ran a test on an Apple Silicon Mac with Python 3.14. The libraries were run 5
 |-----------------|:------:|:------:|
 | [python-ecdsa]  | ~1.0ms | ~3.6ms |
 | [fast-ecdsa]    | ~1.0ms | ~1.3ms |
-| starkbank-ecdsa | ~0.6ms | ~1.7ms |
+| starkbank-ecdsa | ~3.2ms | ~1.7ms |
 
-Our pure Python code cannot compete with C-based libraries backed by GMP's hand-tuned assembly, but it matches the fastest pure-Python implementation on signing and is roughly `30%` faster on verification.
+Our pure Python code cannot compete with C-based libraries backed by GMP's hand-tuned assembly, but it is roughly `30%` faster than the fastest pure-Python implementation on verification. Signing is slower because the secret nonce goes through a fixed-length Montgomery ladder, so its cost does not depend on the nonce.
 
-Performance is driven by Jacobian coordinates, a branch-balanced Montgomery ladder for variable-base scalar multiplication, a precomputed affine table of powers-of-two multiples of the generator (`[G, 2G, 4G, …, 2ⁿG]`) combined with a width-2 NAF of the scalar to eliminate doublings during signing, a mixed affine+Jacobian addition fast path, curve-specific shortcuts in point doubling (A=0 for secp256k1, A=-3 for prime256v1), the secp256k1 GLV endomorphism to split 256-bit scalars into two ~128-bit halves for a 4-scalar simultaneous multi-exponentiation during verification, Shamir's trick with Joint Sparse Form as the fallback path for curves without an efficient endomorphism, and the extended Euclidean algorithm for modular inversion.
+Performance is driven by Jacobian coordinates, a branch-balanced, fixed-length Montgomery ladder for scalar multiplication with secret scalars, a mixed affine+Jacobian addition fast path, curve-specific shortcuts in point doubling (A=0 for secp256k1, A=-3 for prime256v1), the secp256k1 GLV endomorphism to split 256-bit scalars into two ~128-bit halves for a 4-scalar simultaneous multi-exponentiation during verification, Shamir's trick with Joint Sparse Form as the fallback path for curves without an efficient endomorphism, and the extended Euclidean algorithm for modular inversion.
 
 ### Sample Code
 

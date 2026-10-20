@@ -13,6 +13,10 @@ Given a version number MAJOR.MINOR.PATCH, increment:
 
 
 ## [Unreleased]
+### Changed
+- Signing nonce and private key scalar multiplication now run a fixed-length Montgomery ladder, so the point operations no longer depend on the secret scalar (signing is about 5x slower)
+### Removed
+- Math.multiplyGenerator and the precomputed generator powers table
 
 
 ## [2.3.1] - 2026-04-23

@@ -369,3 +369,53 @@ class Prime256v1SecurityTest(TestCase):
 
         sig = Ecdsa.sign(message, k1Key)
         self.assertFalse(Ecdsa.verify(message, sig, p256Key.publicKey()))
+
+
+class ScalarMultiplyOperationCountTest(TestCase):
+    """The scalar multiply used for secret values (nonce in sign, private key
+    in publicKey) must perform a number of point operations that does not
+    depend on the scalar, otherwise the operation count leaks the scalar's
+    weight/magnitude (the Minerva / CVE-2019-15809 class)."""
+
+    def _countOps(self, curve, scalar):
+        counts = {"add": 0, "double": 0}
+        infinityInputs = []
+        originalAdd = Math._jacobianAdd
+        originalDouble = Math._jacobianDouble
+
+        def countingAdd(cls, p, q, A, P):
+            counts["add"] += 1
+            if p.y == 0 or q.y == 0:
+                infinityInputs.append(("add", counts["add"]))
+            return originalAdd.__func__(cls, p, q, A, P)
+
+        def countingDouble(cls, p, A, P):
+            counts["double"] += 1
+            if p.y == 0:
+                infinityInputs.append(("double", counts["double"]))
+            return originalDouble.__func__(cls, p, A, P)
+
+        Math._jacobianAdd = classmethod(countingAdd)
+        Math._jacobianDouble = classmethod(countingDouble)
+        try:
+            Math.multiply(curve.G, scalar, curve.N, curve.A, curve.P)
+        finally:
+            Math._jacobianAdd = originalAdd
+            Math._jacobianDouble = originalDouble
+        return (counts["add"], counts["double"]), infinityInputs
+
+    def testOpCountIndependentOfScalar(self):
+        for curve in (secp256k1, prime256v1):
+            small, _ = self._countOps(curve, 5)
+            mid, _ = self._countOps(curve, 2 ** 200 + 1)
+            large, _ = self._countOps(curve, curve.N - 1)
+            self.assertEqual(small, mid)
+            self.assertEqual(mid, large)
+
+    def testInfinityOnlyOnFirstStep(self):
+        # n = 1, N - 2 and N - 1 are excluded: an intermediate ladder value
+        # equals N there, so the last step also sees infinity
+        for curve in (secp256k1, prime256v1):
+            for scalar in (2, 5, 2 ** 32 + 1, 2 ** 200 + 1, curve.N >> 32, curve.N - 3):
+                _, infinityInputs = self._countOps(curve, scalar)
+                self.assertEqual(infinityInputs, [("add", 1)])
