@@ -23,6 +23,10 @@ class CurveFp:
         # GLV endomorphism parameters (only for curves that support one,
         # e.g. secp256k1). None means no endomorphism; fall back to Shamir+JSF.
         self.glvParams = glvParams
+        # Hasse bound: #E <= P + 1 + 2*sqrt(P). A cofactor of 2 or more would
+        # force N <= #E / 2, so N above that bound means every point on the
+        # curve is already in the order-N subgroup.
+        self.cofactorIsOne = N > (P + 1 + _isqrt(4 * P)) // 2
 
     def contains(self, p):
         """
@@ -48,6 +52,17 @@ class CurveFp:
         if isEven != (y % 2 == 0):
             y = self.P - y
         return y
+
+
+def _isqrt(n):
+    if n < 2:
+        return n
+    x = 1 << ((n.bit_length() + 1) // 2)
+    while True:
+        y = (x + n // x) // 2
+        if y >= x:
+            return x
+        x = y
 
 
 _curvesByOid = {tuple(curve.oid): curve for curve in []}

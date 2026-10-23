@@ -79,8 +79,13 @@ class PublicKey:
             raise Exception("Public Key point is at infinity")
         if not curve.contains(p):
             raise Exception("Point ({x},{y}) is not valid for curve {name}".format(x=p.x, y=p.y, name=curve.name))
-        if not Math.multiply(p=p, n=curve.N, N=curve.N, A=curve.A, P=curve.P).isAtInfinity():
-            raise Exception("Point ({x},{y}) * {name}.N is not at infinity".format(x=p.x, y=p.y, name=curve.name))
+        if curve.cofactorIsOne:
+            return publicKey
+        # P is in the order-N subgroup iff (N-1)*P == -P. Math.multiply reduces
+        # the scalar modulo N, and checking N*P for infinity misses order-2N
+        # points because the Jacobian code treats y == 0 as infinity.
+        if not _isMinus(_multiplyPublic(p, curve.N - 1, curve), p, curve):
+            raise Exception("Point ({x},{y}) is not in the order-N subgroup of curve {name}".format(x=p.x, y=p.y, name=curve.name))
         return publicKey
         
     @classmethod
@@ -94,6 +99,21 @@ class PublicKey:
         if not curve.contains(point):
             raise Exception("Point ({x},{y}) is not valid for curve {name}".format(x=x, y=y, name=curve.name))
         return cls(point=point, curve=curve)
+
+
+def _multiplyPublic(p, n, curve):
+    # plain double-and-add without any reduction or padding of n; p is public
+    point = Math._toJacobian(p)
+    result = Point(0, 0, 1)
+    for bit in bin(n)[2:]:
+        result = Math._jacobianDouble(result, curve.A, curve.P)
+        if bit == "1":
+            result = Math._jacobianAdd(result, point, curve.A, curve.P)
+    return Math._fromJacobian(result, curve.P)
+
+
+def _isMinus(q, p, curve):
+    return q.x == p.x and q.y == (-p.y) % curve.P
 
 
 _evenTag = "02"

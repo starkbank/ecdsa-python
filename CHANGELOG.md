@@ -13,6 +13,8 @@ Given a version number MAJOR.MINOR.PATCH, increment:
 
 
 ## [Unreleased]
+### Fixed
+- PublicKey.fromString subgroup check, which never rejected points outside the order-N subgroup on curves with cofactor > 1
 
 
 ## [2.3.1] - 2026-04-23
